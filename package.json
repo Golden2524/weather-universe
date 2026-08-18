@@ -1,15 +1,16 @@
 {
   "name": "weather-universe",
+  "version": "0.0.1",
   "private": true,
+  "packageManager": "pnpm@11.22.0",
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck"
   },
-  "packageManager": "pnpm@latest",
   "devDependencies": {
-    "turbo": "^2.0.0",
-    "typescript": "^5.0.0"
+    "turbo": "^2.10.10",
+    "typescript": "^5.9.3"
   }
 }

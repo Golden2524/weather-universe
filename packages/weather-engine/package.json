@@ -1,0 +1,12 @@
+{
+  "name": "@weather-universe/weather-engine",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@weather-universe/types": "workspace:*"
+  }
+}
