@@ -1,6 +1,7 @@
 import Fastify from "fastify"
 import cors from "@fastify/cors"
 
+import { locationRoutes } from "./modules/location/location.routes"
 import { weatherRoutes } from "./modules/weather/weather.routes"
 
 const app = Fastify({
@@ -13,6 +14,10 @@ await app.register(cors, {
 
 await app.register(weatherRoutes, {
   prefix: "/weather"
+})
+
+await app.register(locationRoutes, {
+  prefix: "/location"
 })
 
 app.get("/health", async () => {
