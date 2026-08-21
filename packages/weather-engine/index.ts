@@ -21,3 +21,23 @@ export {
   normalizeOpenMeteoWeather,
   getWeatherCondition
 } from "./adapters/normalize-weather"
+
+export {
+  generateWeatherInsights
+} from "./insights/generate-insights"
+
+export type {
+  WeatherInsights
+} from "./insights/generate-insights"
+
+export {
+  calculateComfortScore
+} from "./calculations/comfort-score"
+
+export {
+  calculateOutdoorScore
+} from "./calculations/outdoor-score"
+
+export {
+  calculateRainRisk
+} from "./calculations/rain-score"
