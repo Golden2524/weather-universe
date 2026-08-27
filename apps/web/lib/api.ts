@@ -64,3 +64,24 @@ export async function getWeatherInsights(
 
   return response.json()
 }
+
+export interface WeatherData {
+  current: {
+    temperature: number
+    feelsLike: number
+    humidity: number
+    windSpeed: number
+    precipitation: number
+    condition: string
+  }
+
+  hourly: Array<{
+    temperature: number
+    precipitationProbability: number
+  }>
+
+  daily?: Array<{
+    temperatureMax: number
+    temperatureMin: number
+  }>
+}

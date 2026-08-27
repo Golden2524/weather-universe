@@ -6,6 +6,7 @@ import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { IntelligenceCard } from "@/components/dashboard/intelligence-card"
 import { WeatherHero } from "@/components/dashboard/weather-hero"
 import { AppShell } from "@/components/layout/app-shell"
+import { WeatherDetails } from "@/components/dashboard/weather-details"
 
 import {
   getWeather,
@@ -16,20 +17,37 @@ import {
 interface WeatherData {
   current: {
     temperature: number
+    feelsLike: number
     humidity: number
     windSpeed: number
     precipitation: number
+    weatherCode: number
+    condition: string
   }
 
   hourly: Array<{
+    time: string
     temperature: number
+    feelsLike: number
     precipitationProbability: number
+    precipitation: number
+    weatherCode: number
+    condition: string
+    windSpeed: number
   }>
 
-  daily?: Array<{
+  daily: Array<{
+    date: string
+    weatherCode: number
+    condition: string
     temperatureMax: number
     temperatureMin: number
+    precipitationProbabilityMax: number
+    sunrise: string
+    sunset: string
   }>
+
+  updatedAt: string
 }
 
 interface WeatherInsights {
@@ -52,6 +70,16 @@ const DEFAULT_LOCATION: LocationResult = {
   latitude: 6.5244,
   longitude: 3.3792,
   timezone: "Africa/Lagos"
+}
+
+function formatCondition(condition: string) {
+  return condition
+    .split("-")
+    .map(
+      (word) =>
+        word.charAt(0).toUpperCase() + word.slice(1)
+    )
+    .join(" ")
 }
 
 export default function Home() {
@@ -136,8 +164,8 @@ export default function Home() {
               location={selectedLocation.name}
               country={selectedLocation.country}
               temperature={weather.current.temperature}
-              feelsLike={weather.current.temperature}
-              condition="Live weather"
+              feelsLike={weather.current.feelsLike}
+              condition={formatCondition(weather.current.condition)}
               high={
                 weather.daily?.[0]?.temperatureMax ??
                 weather.current.temperature
@@ -145,6 +173,15 @@ export default function Home() {
               low={
                 weather.daily?.[0]?.temperatureMin ??
                 weather.current.temperature
+              }
+            />
+
+            <WeatherDetails
+              humidity={weather.current.humidity}
+              windSpeed={weather.current.windSpeed}
+              precipitation={weather.current.precipitation}
+              precipitationProbability={
+                weather.hourly[0]?.precipitationProbability ?? 0
               }
             />
 
