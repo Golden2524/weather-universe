@@ -7,6 +7,7 @@ import { IntelligenceCard } from "@/components/dashboard/intelligence-card"
 import { WeatherHero } from "@/components/dashboard/weather-hero"
 import { AppShell } from "@/components/layout/app-shell"
 import { WeatherDetails } from "@/components/dashboard/weather-details"
+import { HourlyForecast } from "@/components/dashboard/hourly-forecast"
 
 import {
   getWeather,
@@ -175,6 +176,8 @@ export default function Home() {
                 weather.current.temperature
               }
             />
+
+            <HourlyForecast hourly={weather.hourly} />
 
             <WeatherDetails
               humidity={weather.current.humidity}
