@@ -8,6 +8,7 @@ interface WeatherHeroProps {
   condition: string
   high: number
   low: number
+  updatedAt: string
 }
 
 export function WeatherHero({
@@ -17,7 +18,8 @@ export function WeatherHero({
   feelsLike,
   condition,
   high,
-  low
+  low,
+  updatedAt
 }: WeatherHeroProps) {
   return (
     <Card className="relative overflow-hidden p-6 sm:p-10">
@@ -75,6 +77,15 @@ export function WeatherHero({
             </div>
           </div>
         </div>
+
+        <p className="mt-6 text-xs text-white/40">
+          Last updated{" "}
+          {new Date(updatedAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+          })}
+        </p>
+
       </div>
     </Card>
   )

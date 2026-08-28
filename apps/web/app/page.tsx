@@ -171,6 +171,8 @@ export default function Home() {
                 weather.daily?.[0]?.temperatureMin ??
                 weather.current.temperature
               }
+
+              updatedAt={weather.updatedAt}
             />
 
             {insights && (
