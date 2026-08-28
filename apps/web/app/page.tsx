@@ -8,6 +8,8 @@ import { WeatherHero } from "@/components/dashboard/weather-hero"
 import { AppShell } from "@/components/layout/app-shell"
 import { WeatherDetails } from "@/components/dashboard/weather-details"
 import { HourlyForecast } from "@/components/dashboard/hourly-forecast"
+import { DailyForecast } from "@/components/dashboard/daily-forecast"
+import { WeatherLoading } from "@/components/dashboard/weather-loading"
 
 import {
   getWeather,
@@ -145,13 +147,7 @@ export default function Home() {
       />
 
       <div className="flex flex-1 flex-col gap-6 py-8">
-        {isLoading && (
-          <div className="flex min-h-[300px] items-center justify-center">
-            <p className="text-white/60">
-              Reading the atmosphere...
-            </p>
-          </div>
-        )}
+        {isLoading && <WeatherLoading />}
 
         {error && (
           <div className="rounded-3xl border border-red-400/20 bg-red-400/10 p-6 text-red-200">
@@ -174,17 +170,6 @@ export default function Home() {
               low={
                 weather.daily?.[0]?.temperatureMin ??
                 weather.current.temperature
-              }
-            />
-
-            <HourlyForecast hourly={weather.hourly} />
-
-            <WeatherDetails
-              humidity={weather.current.humidity}
-              windSpeed={weather.current.windSpeed}
-              precipitation={weather.current.precipitation}
-              precipitationProbability={
-                weather.hourly[0]?.precipitationProbability ?? 0
               }
             />
 
@@ -234,6 +219,22 @@ export default function Home() {
                 </div>
               </section>
             )}
+
+            <HourlyForecast hourly={weather.hourly} />
+
+            <WeatherDetails
+              humidity={weather.current.humidity}
+              windSpeed={weather.current.windSpeed}
+              precipitation={weather.current.precipitation}
+              precipitationProbability={
+                weather.hourly[0]?.precipitationProbability ?? 0
+              }
+            />
+
+            {weather.daily && (
+              <DailyForecast days={weather.daily} />
+            )}
+
           </>
         )}
       </div>
