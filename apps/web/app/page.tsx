@@ -102,9 +102,12 @@ export default function Home() {
     useState<string | null>(null)
 
   useEffect(() => {
-    async function loadWeather() {
+    async function loadWeather(showLoading = false) {
       try {
-        setIsLoading(true)
+        if (showLoading) {
+          setIsLoading(true)
+        }
+
         setError(null)
 
         const [weatherData, insightsData] =
@@ -130,7 +133,13 @@ export default function Home() {
       }
     }
 
-    loadWeather()
+    loadWeather(true)
+
+    const interval = setInterval(() => {
+      loadWeather(false)
+    }, 300000)
+
+    return () => clearInterval(interval)
   }, [selectedLocation])
 
   function handleLocationSelect(
