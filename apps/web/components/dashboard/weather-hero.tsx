@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card"
+import { WeatherIcon } from "./weather-icon"
 
 interface WeatherHeroProps {
   location: string
@@ -37,9 +38,16 @@ export function WeatherHero({
               {location}
             </h2>
 
-            <p className="mt-2 text-base text-white/50">
-              {country} · {condition}
-            </p>
+            <div className="mt-2 flex items-center gap-2 text-white/50">
+              <WeatherIcon
+                condition={condition.toLowerCase().replace(/\s+/g, "-")}
+                className="h-5 w-5 text-blue-300"
+              />
+
+              <p className="text-base">
+                {country} · {condition}
+              </p>
+            </div>
           </div>
 
           <div className="flex items-end gap-6">

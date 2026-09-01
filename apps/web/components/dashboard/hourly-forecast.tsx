@@ -1,8 +1,11 @@
+import { WeatherIcon } from "./weather-icon"
+
 interface HourlyForecastProps {
   hourly: Array<{
     time: string
     temperature: number
     precipitationProbability: number
+    condition: string
   }>
 }
 
@@ -35,6 +38,11 @@ export function HourlyForecast({
                 minute: "2-digit"
               })}
             </p>
+
+            <WeatherIcon
+              condition={hour.condition}
+              className="mt-4 h-6 w-6 text-blue-300"
+            />
 
             <p className="mt-4 text-3xl font-semibold">
               {Math.round(hour.temperature)}°

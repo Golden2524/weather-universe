@@ -1,7 +1,10 @@
 import { Card } from "@/components/ui/card"
 
+import { WeatherIcon } from "./weather-icon"
+
 interface DailyForecastItem {
   date: string
+  condition: string
   temperatureMax: number
   temperatureMin: number
   precipitationProbabilityMax: number
@@ -56,24 +59,31 @@ export function DailyForecast({
                 </p>
               </div>
 
-              <div className="text-right">
-                <p className="text-sm font-medium">
-                  {Math.round(
-                    day.temperatureMax
-                  )}°
-                  <span className="text-white/40">
-                    {" "}
-                    / {Math.round(
-                      day.temperatureMin
-                    )}°
-                  </span>
-                </p>
+              <div className="flex items-center gap-6">
+                <WeatherIcon
+                  condition={day.condition}
+                  className="h-6 w-6 text-blue-300"
+                />
 
-                <p className="mt-1 text-xs text-blue-300">
-                  {Math.round(
-                    day.precipitationProbabilityMax
-                  )}% rain
-                </p>
+                <div className="text-right">
+                  <p className="text-sm font-medium">
+                    {Math.round(
+                      day.temperatureMax
+                    )}°
+                    <span className="text-white/40">
+                      {" "}
+                      / {Math.round(
+                        day.temperatureMin
+                      )}°
+                    </span>
+                  </p>
+
+                  <p className="mt-1 text-xs text-blue-300">
+                    {Math.round(
+                      day.precipitationProbabilityMax
+                    )}% rain
+                  </p>
+                </div>
               </div>
             </div>
           )
