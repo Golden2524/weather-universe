@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { IntelligenceCard } from "@/components/dashboard/intelligence-card"
@@ -98,14 +98,24 @@ export default function Home() {
   const [isLoading, setIsLoading] =
     useState(true)
 
+  const [isRefreshing, setIsRefreshing] =
+    useState(false)
+
   const [error, setError] =
     useState<string | null>(null)
 
-  useEffect(() => {
-    async function loadWeather(showLoading = false) {
+  const loadWeather = useCallback(
+    async (
+      showLoading = false,
+      showRefreshing = false
+    ) => {
       try {
         if (showLoading) {
           setIsLoading(true)
+        }
+
+        if (showRefreshing) {
+          setIsRefreshing(true)
         }
 
         setError(null)
@@ -130,17 +140,25 @@ export default function Home() {
         )
       } finally {
         setIsLoading(false)
+        setIsRefreshing(false)
       }
-    }
+    },
+    [selectedLocation]
+  )
 
+  useEffect(() => {
     loadWeather(true)
 
     const interval = setInterval(() => {
-      loadWeather(false)
+      loadWeather()
     }, 300000)
 
     return () => clearInterval(interval)
-  }, [selectedLocation])
+  }, [loadWeather])
+
+  function handleRefresh() {
+    loadWeather(false, true)
+  }
 
   function handleLocationSelect(
     location: LocationResult
@@ -153,6 +171,8 @@ export default function Home() {
       <DashboardHeader
         location={selectedLocation.name}
         onLocationSelect={handleLocationSelect}
+        onRefresh={handleRefresh}
+        isRefreshing={isRefreshing}
       />
 
       <div className="flex flex-1 flex-col gap-6 py-8">
@@ -180,7 +200,6 @@ export default function Home() {
                 weather.daily?.[0]?.temperatureMin ??
                 weather.current.temperature
               }
-
               updatedAt={weather.updatedAt}
             />
 
@@ -242,10 +261,7 @@ export default function Home() {
               }
             />
 
-            {weather.daily && (
-              <DailyForecast days={weather.daily} />
-            )}
-
+            <DailyForecast days={weather.daily} />
           </>
         )}
       </div>
