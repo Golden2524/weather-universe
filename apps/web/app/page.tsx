@@ -29,7 +29,6 @@ interface WeatherData {
     weatherCode: number
     condition: string
   }
-
   hourly: Array<{
     time: string
     temperature: number
@@ -40,7 +39,6 @@ interface WeatherData {
     condition: string
     windSpeed: number
   }>
-
   daily: Array<{
     date: string
     weatherCode: number
@@ -51,19 +49,16 @@ interface WeatherData {
     sunrise: string
     sunset: string
   }>
-
   updatedAt: string
 }
 
 interface WeatherInsights {
   summary: string
-
   scores: {
     comfort: number
     outdoor: number
     rainRisk: number
   }
-
   highlights: string[]
 }
 
@@ -91,6 +86,12 @@ export default function Home() {
   const [selectedLocation, setSelectedLocation] =
     useState<LocationResult>(DEFAULT_LOCATION)
 
+  const [temperatureUnit, setTemperatureUnit] =
+    useState<TemperatureUnit>("C")
+
+  const [preferencesLoaded, setPreferencesLoaded] =
+    useState(false)
+
   const [weather, setWeather] =
     useState<WeatherData | null>(null)
 
@@ -103,13 +104,62 @@ export default function Home() {
   const [isRefreshing, setIsRefreshing] =
     useState(false)
 
-  const [temperatureUnit, setTemperatureUnit] =
-    useState<TemperatureUnit>("C")
-
   const [error, setError] =
     useState<string | null>(null)
 
   useEffect(() => {
+    const savedLocation =
+      localStorage.getItem("weather-location")
+
+    if (savedLocation) {
+      try {
+        setSelectedLocation(
+          JSON.parse(savedLocation)
+        )
+      } catch {
+        // Keep default location
+      }
+    }
+
+    const savedUnit =
+      localStorage.getItem(
+        "weather-temperature-unit"
+      )
+
+    if (savedUnit === "F") {
+      setTemperatureUnit("F")
+    }
+
+    setPreferencesLoaded(true)
+  }, [])
+
+  useEffect(() => {
+    if (!preferencesLoaded) {
+      return
+    }
+
+    localStorage.setItem(
+      "weather-location",
+      JSON.stringify(selectedLocation)
+    )
+  }, [selectedLocation, preferencesLoaded])
+
+  useEffect(() => {
+    if (!preferencesLoaded) {
+      return
+    }
+
+    localStorage.setItem(
+      "weather-temperature-unit",
+      temperatureUnit
+    )
+  }, [temperatureUnit, preferencesLoaded])
+
+  useEffect(() => {
+    if (!preferencesLoaded) {
+      return
+    }
+
     async function loadWeather(
       showLoading = false,
       showRefreshing = false
@@ -156,7 +206,7 @@ export default function Home() {
     }, 300000)
 
     return () => clearInterval(interval)
-  }, [selectedLocation])
+  }, [selectedLocation, preferencesLoaded])
 
   async function handleRefresh() {
     try {
