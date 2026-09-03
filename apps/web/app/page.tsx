@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { IntelligenceCard } from "@/components/dashboard/intelligence-card"
@@ -16,6 +16,8 @@ import {
   getWeatherInsights,
   type LocationResult
 } from "@/lib/api"
+
+import type { TemperatureUnit } from "@/lib/temperature"
 
 interface WeatherData {
   current: {
@@ -101,14 +103,17 @@ export default function Home() {
   const [isRefreshing, setIsRefreshing] =
     useState(false)
 
+  const [temperatureUnit, setTemperatureUnit] =
+    useState<TemperatureUnit>("C")
+
   const [error, setError] =
     useState<string | null>(null)
 
-  const loadWeather = useCallback(
-    async (
+  useEffect(() => {
+    async function loadWeather(
       showLoading = false,
       showRefreshing = false
-    ) => {
+    ) {
       try {
         if (showLoading) {
           setIsLoading(true)
@@ -142,22 +147,43 @@ export default function Home() {
         setIsLoading(false)
         setIsRefreshing(false)
       }
-    },
-    [selectedLocation]
-  )
+    }
 
-  useEffect(() => {
     loadWeather(true)
 
     const interval = setInterval(() => {
-      loadWeather()
+      loadWeather(false)
     }, 300000)
 
     return () => clearInterval(interval)
-  }, [loadWeather])
+  }, [selectedLocation])
 
-  function handleRefresh() {
-    loadWeather(false, true)
+  async function handleRefresh() {
+    try {
+      setIsRefreshing(true)
+      setError(null)
+
+      const [weatherData, insightsData] =
+        await Promise.all([
+          getWeather(
+            selectedLocation.latitude,
+            selectedLocation.longitude
+          ),
+          getWeatherInsights(
+            selectedLocation.latitude,
+            selectedLocation.longitude
+          )
+        ])
+
+      setWeather(weatherData)
+      setInsights(insightsData)
+    } catch {
+      setError(
+        "Unable to refresh weather data. Please try again."
+      )
+    } finally {
+      setIsRefreshing(false)
+    }
   }
 
   function handleLocationSelect(
@@ -173,6 +199,8 @@ export default function Home() {
         onLocationSelect={handleLocationSelect}
         onRefresh={handleRefresh}
         isRefreshing={isRefreshing}
+        temperatureUnit={temperatureUnit}
+        onTemperatureUnitChange={setTemperatureUnit}
       />
 
       <div className="flex flex-1 flex-col gap-6 py-8">
@@ -191,7 +219,9 @@ export default function Home() {
               country={selectedLocation.country}
               temperature={weather.current.temperature}
               feelsLike={weather.current.feelsLike}
-              condition={formatCondition(weather.current.condition)}
+              condition={formatCondition(
+                weather.current.condition
+              )}
               high={
                 weather.daily?.[0]?.temperatureMax ??
                 weather.current.temperature
@@ -201,6 +231,7 @@ export default function Home() {
                 weather.current.temperature
               }
               updatedAt={weather.updatedAt}
+              temperatureUnit={temperatureUnit}
             />
 
             {insights && (
@@ -250,18 +281,27 @@ export default function Home() {
               </section>
             )}
 
-            <HourlyForecast hourly={weather.hourly} />
+            <HourlyForecast
+              hourly={weather.hourly}
+              temperatureUnit={temperatureUnit}
+            />
 
             <WeatherDetails
               humidity={weather.current.humidity}
               windSpeed={weather.current.windSpeed}
               precipitation={weather.current.precipitation}
               precipitationProbability={
-                weather.hourly[0]?.precipitationProbability ?? 0
+                weather.hourly[0]
+                  ?.precipitationProbability ?? 0
               }
             />
 
-            <DailyForecast days={weather.daily} />
+            {weather.daily && (
+              <DailyForecast
+                days={weather.daily}
+                temperatureUnit={temperatureUnit}
+              />
+            )}
           </>
         )}
       </div>

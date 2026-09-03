@@ -8,18 +8,26 @@ import {
   type LocationResult
 } from "@/lib/api"
 
+import type { TemperatureUnit } from "@/lib/temperature"
+
 interface DashboardHeaderProps {
   location: string
   onLocationSelect: (location: LocationResult) => void
   onRefresh: () => void
   isRefreshing: boolean
+  temperatureUnit: TemperatureUnit
+  onTemperatureUnitChange: (
+    unit: TemperatureUnit
+  ) => void
 }
 
 export function DashboardHeader({
   location,
   onLocationSelect,
   onRefresh,
-  isRefreshing
+  isRefreshing,
+  temperatureUnit,
+  onTemperatureUnitChange
 }: DashboardHeaderProps) {
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<LocationResult[]>([])
@@ -56,7 +64,7 @@ export function DashboardHeader({
   }
 
   return (
-    <header className="relative flex items-center justify-between gap-4 border-b border-white/10 pb-6">
+    <header className="relative flex flex-col gap-4 border-b border-white/10 pb-6 lg:flex-row lg:items-center lg:justify-between">
       <div>
         <p className="text-sm text-white/50">
           Atmospheric intelligence
@@ -67,7 +75,31 @@ export function DashboardHeader({
         </h1>
       </div>
 
-      <div className="flex w-full max-w-md items-center gap-3">
+      <div className="flex w-full max-w-xl items-center gap-3">
+        <div className="flex shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-1">
+          <button
+            onClick={() => onTemperatureUnitChange("C")}
+            className={`rounded-xl px-3 py-2 text-sm font-medium transition ${temperatureUnit === "C"
+                ? "bg-blue-500 text-white"
+                : "text-white/50 hover:text-white"
+              }`}
+            aria-label="Use Celsius"
+          >
+            °C
+          </button>
+
+          <button
+            onClick={() => onTemperatureUnitChange("F")}
+            className={`rounded-xl px-3 py-2 text-sm font-medium transition ${temperatureUnit === "F"
+                ? "bg-blue-500 text-white"
+                : "text-white/50 hover:text-white"
+              }`}
+            aria-label="Use Fahrenheit"
+          >
+            °F
+          </button>
+        </div>
+
         <button
           onClick={onRefresh}
           disabled={isRefreshing}
@@ -80,9 +112,9 @@ export function DashboardHeader({
           />
         </button>
 
-        <div className="relative w-full">
+        <div className="relative min-w-0 flex-1">
           <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-            <Search className="h-4 w-4 text-white/40" />
+            <Search className="h-4 w-4 shrink-0 text-white/40" />
 
             <input
               value={query}
@@ -90,7 +122,7 @@ export function DashboardHeader({
                 setQuery(event.target.value)
               }
               placeholder="Search a city..."
-              className="w-full bg-transparent text-sm outline-none placeholder:text-white/30"
+              className="w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-white/30"
             />
           </div>
 
@@ -108,7 +140,7 @@ export function DashboardHeader({
                   onClick={() => handleSelect(result)}
                   className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-white/5"
                 >
-                  <MapPin className="h-4 w-4 text-blue-400" />
+                  <MapPin className="h-4 w-4 shrink-0 text-blue-400" />
 
                   <div>
                     <p className="text-sm font-medium">

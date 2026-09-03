@@ -1,3 +1,8 @@
+import {
+  formatTemperature,
+  type TemperatureUnit
+} from "@/lib/temperature"
+
 import { WeatherIcon } from "./weather-icon"
 
 interface HourlyForecastProps {
@@ -7,10 +12,12 @@ interface HourlyForecastProps {
     precipitationProbability: number
     condition: string
   }>
+  temperatureUnit: TemperatureUnit
 }
 
 export function HourlyForecast({
-  hourly
+  hourly,
+  temperatureUnit
 }: HourlyForecastProps) {
   const forecast = hourly.slice(0, 12)
 
@@ -45,7 +52,10 @@ export function HourlyForecast({
             />
 
             <p className="mt-4 text-3xl font-semibold">
-              {Math.round(hour.temperature)}°
+              {formatTemperature(
+                hour.temperature,
+                temperatureUnit
+              )}
             </p>
 
             <p className="mt-2 text-sm text-blue-300">

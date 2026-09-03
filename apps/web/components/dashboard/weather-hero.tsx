@@ -1,4 +1,9 @@
 import { Card } from "@/components/ui/card"
+import {
+  formatTemperature,
+  type TemperatureUnit
+} from "@/lib/temperature"
+
 import { WeatherIcon } from "./weather-icon"
 
 interface WeatherHeroProps {
@@ -10,6 +15,7 @@ interface WeatherHeroProps {
   high: number
   low: number
   updatedAt: string
+  temperatureUnit: TemperatureUnit
 }
 
 export function WeatherHero({
@@ -20,7 +26,8 @@ export function WeatherHero({
   condition,
   high,
   low,
-  updatedAt
+  updatedAt,
+  temperatureUnit
 }: WeatherHeroProps) {
   return (
     <Card className="relative overflow-hidden p-6 sm:p-10">
@@ -57,7 +64,10 @@ export function WeatherHero({
               </p>
 
               <p className="mt-2 text-7xl font-semibold tracking-tighter sm:text-8xl">
-                {Math.round(temperature)}°
+                {formatTemperature(
+                  temperature,
+                  temperatureUnit
+                )}
               </p>
             </div>
 
@@ -65,21 +75,30 @@ export function WeatherHero({
               <p>
                 Feels like{" "}
                 <span className="text-white">
-                  {Math.round(feelsLike)}°
+                  {formatTemperature(
+                    feelsLike,
+                    temperatureUnit
+                  )}
                 </span>
               </p>
 
               <p className="mt-2">
                 H{" "}
                 <span className="text-white">
-                  {Math.round(high)}°
+                  {formatTemperature(
+                    high,
+                    temperatureUnit
+                  )}
                 </span>
               </p>
 
               <p>
                 L{" "}
                 <span className="text-white">
-                  {Math.round(low)}°
+                  {formatTemperature(
+                    low,
+                    temperatureUnit
+                  )}
                 </span>
               </p>
             </div>
@@ -93,7 +112,6 @@ export function WeatherHero({
             minute: "2-digit"
           })}
         </p>
-
       </div>
     </Card>
   )

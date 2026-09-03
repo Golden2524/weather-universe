@@ -1,4 +1,8 @@
 import { Card } from "@/components/ui/card"
+import {
+  formatTemperature,
+  type TemperatureUnit
+} from "@/lib/temperature"
 
 import { WeatherIcon } from "./weather-icon"
 
@@ -12,11 +16,23 @@ interface DailyForecastItem {
 
 interface DailyForecastProps {
   days: DailyForecastItem[]
+  temperatureUnit: TemperatureUnit
 }
 
 export function DailyForecast({
-  days
+  days,
+  temperatureUnit
 }: DailyForecastProps) {
+  const forecastDays = days
+    .filter(
+      (day) =>
+        day.date &&
+        day.condition &&
+        Number.isFinite(day.temperatureMax) &&
+        Number.isFinite(day.temperatureMin)
+    )
+    .slice(0, 7)
+
   return (
     <Card className="p-6">
       <div className="mb-6">
@@ -30,7 +46,7 @@ export function DailyForecast({
       </div>
 
       <div className="space-y-3">
-        {days.map((day) => {
+        {forecastDays.map((day) => {
           const date = new Date(day.date)
 
           return (
@@ -40,22 +56,16 @@ export function DailyForecast({
             >
               <div>
                 <p className="text-sm font-medium">
-                  {date.toLocaleDateString(
-                    undefined,
-                    {
-                      weekday: "short"
-                    }
-                  )}
+                  {date.toLocaleDateString(undefined, {
+                    weekday: "short"
+                  })}
                 </p>
 
                 <p className="text-xs text-white/40">
-                  {date.toLocaleDateString(
-                    undefined,
-                    {
-                      month: "short",
-                      day: "numeric"
-                    }
-                  )}
+                  {date.toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric"
+                  })}
                 </p>
               </div>
 
@@ -67,21 +77,25 @@ export function DailyForecast({
 
                 <div className="text-right">
                   <p className="text-sm font-medium">
-                    {Math.round(
-                      day.temperatureMax
-                    )}°
+                    {formatTemperature(
+                      day.temperatureMax,
+                      temperatureUnit
+                    )}
                     <span className="text-white/40">
                       {" "}
-                      / {Math.round(
-                        day.temperatureMin
-                      )}°
+                      /{" "}
+                      {formatTemperature(
+                        day.temperatureMin,
+                        temperatureUnit
+                      )}
                     </span>
                   </p>
 
                   <p className="mt-1 text-xs text-blue-300">
                     {Math.round(
                       day.precipitationProbabilityMax
-                    )}% rain
+                    )}
+                    % rain
                   </p>
                 </div>
               </div>
