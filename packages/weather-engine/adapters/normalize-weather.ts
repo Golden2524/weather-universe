@@ -3,7 +3,7 @@ import type {
   WeatherData
 } from "@weather-universe/types"
 
-import type { OpenMeteoResponse } from "../providers/open-meteo"
+import type { OpenMeteoResponse } from "../providers/open-meteo.js"
 
 export function getWeatherCondition(
   weatherCode: number

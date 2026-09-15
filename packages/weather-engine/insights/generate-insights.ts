@@ -1,8 +1,8 @@
 import type { WeatherData } from "@weather-universe/types"
 
-import { calculateComfortScore } from "../calculations/comfort-score"
-import { calculateOutdoorScore } from "../calculations/outdoor-score"
-import { calculateRainRisk } from "../calculations/rain-score"
+import { calculateComfortScore } from "../calculations/comfort-score.js"
+import { calculateOutdoorScore } from "../calculations/outdoor-score.js"
+import { calculateRainRisk } from "../calculations/rain-score.js"
 
 export interface WeatherInsights {
   summary: string

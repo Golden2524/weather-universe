@@ -1,5 +1,5 @@
-import { getOpenMeteoWeather } from "./providers/open-meteo"
-import { normalizeOpenMeteoWeather } from "./adapters/normalize-weather"
+import { getOpenMeteoWeather } from "./providers/open-meteo.js"
+import { normalizeOpenMeteoWeather } from "./adapters/normalize-weather.js"
 
 export async function getWeather(
   latitude: number,
@@ -15,29 +15,29 @@ export async function getWeather(
 
 export {
   getOpenMeteoWeather
-} from "./providers/open-meteo"
+} from "./providers/open-meteo.js"
 
 export {
   normalizeOpenMeteoWeather,
   getWeatherCondition
-} from "./adapters/normalize-weather"
+} from "./adapters/normalize-weather.js"
 
 export {
   generateWeatherInsights
-} from "./insights/generate-insights"
+} from "./insights/generate-insights.js"
 
 export type {
   WeatherInsights
-} from "./insights/generate-insights"
+} from "./insights/generate-insights.js"
 
 export {
   calculateComfortScore
-} from "./calculations/comfort-score"
+} from "./calculations/comfort-score.js"
 
 export {
   calculateOutdoorScore
-} from "./calculations/outdoor-score"
+} from "./calculations/outdoor-score.js"
 
 export {
   calculateRainRisk
-} from "./calculations/rain-score"
+} from "./calculations/rain-score.js"

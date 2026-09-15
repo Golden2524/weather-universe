@@ -1,15 +1,21 @@
 import Fastify from "fastify"
 import cors from "@fastify/cors"
 
-import { locationRoutes } from "./modules/location/location.routes"
-import { weatherRoutes } from "./modules/weather/weather.routes"
+import { locationRoutes } from "./modules/location/location.routes.js"
+import { weatherRoutes } from "./modules/weather/weather.routes.js"
 
 const app = Fastify({
   logger: true
 })
 
+const port = Number(process.env.PORT ?? 4000)
+const host = process.env.HOST ?? "0.0.0.0"
+
+const frontendUrl =
+  process.env.FRONTEND_URL ?? "http://localhost:3000"
+
 await app.register(cors, {
-  origin: true
+  origin: frontendUrl
 })
 
 await app.register(weatherRoutes, {
@@ -30,8 +36,8 @@ app.get("/health", async () => {
 
 try {
   await app.listen({
-    port: 4000,
-    host: "0.0.0.0"
+    port,
+    host
   })
 } catch (error) {
   app.log.error(error)

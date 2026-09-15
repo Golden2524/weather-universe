@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify"
 
-import { searchLocations } from "./location.service"
+import { searchLocations } from "./location.service.js"
 
 interface LocationSearchQuery {
   q?: string
