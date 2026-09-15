@@ -18,6 +18,16 @@ interface LocationSearchResponse {
   results: LocationResult[]
 }
 
+interface ReverseGeocodingResponse {
+  latitude: number
+  longitude: number
+  city?: string
+  locality?: string
+  principalSubdivision?: string
+  countryName?: string
+  countryCode?: string
+}
+
 export async function searchLocations(
   query: string
 ): Promise<LocationResult[]> {
@@ -63,6 +73,78 @@ export async function getWeatherInsights(
   }
 
   return response.json()
+}
+
+export async function getLocationFromCoordinates(
+  latitude: number,
+  longitude: number
+): Promise<LocationResult | null> {
+  const response = await fetch(
+    `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+  )
+
+  if (!response.ok) {
+    throw new Error("Failed to detect your location.")
+  }
+
+  const data =
+    (await response.json()) as ReverseGeocodingResponse
+
+  const name =
+    data.city ??
+    data.locality ??
+    data.principalSubdivision
+
+  if (!name || !data.countryName) {
+    return null
+  }
+
+  return {
+    id: Math.round(
+      latitude * 100000 + longitude * 100000
+    ),
+    name,
+    country: data.countryName,
+    countryCode: data.countryCode ?? "",
+    latitude,
+    longitude,
+    timezone:
+      Intl.DateTimeFormat().resolvedOptions().timeZone
+  }
+}
+
+export function getBrowserLocation(): Promise<{
+  latitude: number
+  longitude: number
+}> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(
+        new Error(
+          "Location detection is not supported by this browser."
+        )
+      )
+
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        })
+      },
+      (error) => {
+        reject(error)
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 300000
+      }
+    )
+  })
 }
 
 export interface WeatherData {

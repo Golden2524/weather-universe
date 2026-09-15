@@ -5,13 +5,15 @@ import { useEffect, useState } from "react"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { IntelligenceCard } from "@/components/dashboard/intelligence-card"
 import { WeatherHero } from "@/components/dashboard/weather-hero"
-import { AppShell } from "@/components/layout/app-shell"
 import { WeatherDetails } from "@/components/dashboard/weather-details"
 import { HourlyForecast } from "@/components/dashboard/hourly-forecast"
 import { DailyForecast } from "@/components/dashboard/daily-forecast"
 import { WeatherLoading } from "@/components/dashboard/weather-loading"
+import { AppShell } from "@/components/layout/app-shell"
 
 import {
+  getBrowserLocation,
+  getLocationFromCoordinates,
   getWeather,
   getWeatherInsights,
   type LocationResult
@@ -29,6 +31,7 @@ interface WeatherData {
     weatherCode: number
     condition: string
   }
+
   hourly: Array<{
     time: string
     temperature: number
@@ -39,6 +42,7 @@ interface WeatherData {
     condition: string
     windSpeed: number
   }>
+
   daily: Array<{
     date: string
     weatherCode: number
@@ -49,16 +53,19 @@ interface WeatherData {
     sunrise: string
     sunset: string
   }>
+
   updatedAt: string
 }
 
 interface WeatherInsights {
   summary: string
+
   scores: {
     comfort: number
     outdoor: number
     rainRisk: number
   }
+
   highlights: string[]
 }
 
@@ -108,29 +115,64 @@ export default function Home() {
     useState<string | null>(null)
 
   useEffect(() => {
-    const savedLocation =
-      localStorage.getItem("weather-location")
-
-    if (savedLocation) {
-      try {
-        setSelectedLocation(
-          JSON.parse(savedLocation)
+    async function initializePreferences() {
+      const savedUnit =
+        localStorage.getItem(
+          "weather-temperature-unit"
         )
-      } catch {
-        // Keep default location
+
+      if (savedUnit === "F") {
+        setTemperatureUnit("F")
+      } else {
+        setTemperatureUnit("C")
       }
+
+      const savedLocation =
+        localStorage.getItem("weather-location")
+
+      if (savedLocation) {
+        try {
+          const parsedLocation =
+            JSON.parse(savedLocation) as LocationResult
+
+          setSelectedLocation(parsedLocation)
+          setPreferencesLoaded(true)
+
+          return
+        } catch {
+          localStorage.removeItem(
+            "weather-location"
+          )
+        }
+      }
+
+      try {
+        const browserLocation =
+          await getBrowserLocation()
+
+        const detectedLocation =
+          await getLocationFromCoordinates(
+            browserLocation.latitude,
+            browserLocation.longitude
+          )
+
+        if (detectedLocation) {
+          setSelectedLocation(detectedLocation)
+
+          localStorage.setItem(
+            "weather-location",
+            JSON.stringify(detectedLocation)
+          )
+        }
+      } catch {
+        // Location permission denied or detection failed.
+        // Keep the default Lagos location.
+      }
+
+      setPreferencesLoaded(true)
     }
 
-    const savedUnit =
-      localStorage.getItem(
-        "weather-temperature-unit"
-      )
-
-    if (savedUnit === "F") {
-      setTemperatureUnit("F")
-    }
-
-    setPreferencesLoaded(true)
+    initializePreferences()
   }, [])
 
   useEffect(() => {
@@ -181,6 +223,7 @@ export default function Home() {
               selectedLocation.latitude,
               selectedLocation.longitude
             ),
+
             getWeatherInsights(
               selectedLocation.latitude,
               selectedLocation.longitude
@@ -219,6 +262,7 @@ export default function Home() {
             selectedLocation.latitude,
             selectedLocation.longitude
           ),
+
           getWeatherInsights(
             selectedLocation.latitude,
             selectedLocation.longitude
@@ -240,6 +284,21 @@ export default function Home() {
     location: LocationResult
   ) {
     setSelectedLocation(location)
+
+    localStorage.setItem(
+      "weather-location",
+      JSON.stringify(location)
+    )
+  }
+
+  if (!preferencesLoaded) {
+    return (
+      <AppShell>
+        <div className="flex flex-1 items-center justify-center py-16">
+          <WeatherLoading />
+        </div>
+      </AppShell>
+    )
   }
 
   return (
