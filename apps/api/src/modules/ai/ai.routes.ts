@@ -33,14 +33,28 @@ export async function aiRoutes(app: FastifyInstance) {
         weather
       )
 
-      return {
-        answer
-      }
+      return { answer }
     } catch (error) {
-      app.log.error(error)
+      app.log.error(
+        {
+          error
+        },
+        "Weather AI request failed"
+      )
 
-      return reply.code(500).send({
-        error: "Unable to generate an AI response"
+      if (
+        error instanceof Error &&
+        error.message ===
+        "OPENAI_API_KEY is not configured"
+      ) {
+        return reply.code(503).send({
+          error: "Weather AI is not configured."
+        })
+      }
+
+      return reply.code(503).send({
+        error:
+          "Weather AI is temporarily unavailable."
       })
     }
   })

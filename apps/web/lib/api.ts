@@ -28,6 +28,58 @@ interface ReverseGeocodingResponse {
   countryCode?: string
 }
 
+export interface WeatherData {
+  current: {
+    temperature: number
+    feelsLike: number
+    humidity: number
+    windSpeed: number
+    precipitation: number
+    precipitationProbability?: number
+    uvIndex?: number
+    weatherCode?: number
+    condition: string
+  }
+
+  hourly: Array<{
+    time?: string
+    temperature: number
+    feelsLike?: number
+    precipitationProbability: number
+    precipitation?: number
+    weatherCode?: number
+    condition?: string
+    windSpeed?: number
+  }>
+
+  daily?: Array<{
+    date?: string
+    weatherCode?: number
+    condition?: string
+    temperatureMax: number
+    temperatureMin: number
+    precipitationProbabilityMax?: number
+    sunrise?: string
+    sunset?: string
+  }>
+
+  updatedAt?: string
+}
+
+export interface WeatherAssistantContext {
+  location: string
+  current: {
+    temperature: number
+    feelsLike: number
+    humidity: number
+    windSpeed: number
+    precipitationProbability: number
+    uvIndex: number
+  }
+  hourly: WeatherData["hourly"]
+  daily: WeatherData["daily"]
+}
+
 export async function searchLocations(
   query: string
 ): Promise<LocationResult[]> {
@@ -73,6 +125,47 @@ export async function getWeatherInsights(
   }
 
   return response.json()
+}
+
+export async function askWeatherAssistant(
+  question: string,
+  weather: WeatherAssistantContext
+): Promise<string> {
+  const response = await fetch(`${API_URL}/ai/ask`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      question,
+      weather
+    })
+  })
+
+  if (!response.ok) {
+    const data = (await response.json().catch(
+      () => null
+    )) as {
+      error?: string
+    } | null
+
+    throw new Error(
+      data?.error ??
+      "The weather assistant is temporarily unavailable."
+    )
+  }
+
+  const data = (await response.json()) as {
+    answer?: string
+  }
+
+  if (!data.answer) {
+    throw new Error(
+      "The weather assistant did not return an answer."
+    )
+  }
+
+  return data.answer
 }
 
 export async function getLocationFromCoordinates(
@@ -145,25 +238,4 @@ export function getBrowserLocation(): Promise<{
       }
     )
   })
-}
-
-export interface WeatherData {
-  current: {
-    temperature: number
-    feelsLike: number
-    humidity: number
-    windSpeed: number
-    precipitation: number
-    condition: string
-  }
-
-  hourly: Array<{
-    temperature: number
-    precipitationProbability: number
-  }>
-
-  daily?: Array<{
-    temperatureMax: number
-    temperatureMin: number
-  }>
 }

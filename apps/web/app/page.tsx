@@ -9,6 +9,7 @@ import { WeatherDetails } from "@/components/dashboard/weather-details"
 import { HourlyForecast } from "@/components/dashboard/hourly-forecast"
 import { DailyForecast } from "@/components/dashboard/daily-forecast"
 import { WeatherLoading } from "@/components/dashboard/weather-loading"
+import { WeatherAssistant } from "@/components/dashboard/weather-assistant"
 import { AppShell } from "@/components/layout/app-shell"
 
 import {
@@ -28,6 +29,8 @@ interface WeatherData {
     humidity: number
     windSpeed: number
     precipitation: number
+    precipitationProbability?: number
+    uvIndex?: number
     weatherCode: number
     condition: string
   }
@@ -291,6 +294,27 @@ export default function Home() {
     )
   }
 
+  const assistantWeather =
+    weather
+      ? {
+        location: selectedLocation.name,
+        current: {
+          temperature: weather.current.temperature,
+          feelsLike: weather.current.feelsLike,
+          humidity: weather.current.humidity,
+          windSpeed: weather.current.windSpeed,
+          precipitationProbability:
+            weather.current.precipitationProbability ??
+            weather.hourly[0]?.precipitationProbability ??
+            0,
+          uvIndex:
+            weather.current.uvIndex ?? 0
+        },
+        hourly: weather.hourly,
+        daily: weather.daily
+      }
+      : null
+
   if (!preferencesLoaded) {
     return (
       <AppShell>
@@ -412,6 +436,12 @@ export default function Home() {
               />
             )}
           </>
+        )}
+
+        {assistantWeather && (
+          <WeatherAssistant
+            weather={assistantWeather}
+          />
         )}
       </div>
     </AppShell>
