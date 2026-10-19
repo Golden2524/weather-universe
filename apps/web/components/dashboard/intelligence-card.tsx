@@ -36,7 +36,7 @@ export function IntelligenceCard({
 
       <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
         <div
-          className="h-full rounded-full bg-white transition-all"
+          className="h-full rounded-full bg-gradient-to-r from-amber-300 to-emerald-200 transition-all"
           style={{
             width: `${score}%`
           }}

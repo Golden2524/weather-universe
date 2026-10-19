@@ -81,20 +81,20 @@ export function WeatherAssistant({
   return (
     <section
       aria-labelledby="weather-assistant-title"
-      className="overflow-hidden rounded-3xl border border-blue-400/15 bg-gradient-to-br from-blue-500/[0.08] via-white/[0.04] to-white/[0.02] shadow-2xl shadow-black/10"
+      className="overflow-hidden rounded-3xl border border-amber-200/15 bg-gradient-to-br from-amber-200/[0.07] via-white/[0.035] to-white/[0.015] shadow-2xl shadow-black/10"
     >
       <div className="p-5 sm:p-6">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
               <div
-                className="flex h-8 w-8 items-center justify-center rounded-xl border border-blue-400/20 bg-blue-400/10"
+                className="flex h-8 w-8 items-center justify-center rounded-xl border border-amber-200/20 bg-amber-200/10"
                 aria-hidden="true"
               >
                 <span className="text-sm">✦</span>
               </div>
 
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-300">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-200">
                 Weather Universe AI
               </p>
             </div>
@@ -144,7 +144,7 @@ export function WeatherAssistant({
           <button
             type="submit"
             disabled={isLoading || !question.trim()}
-            className="min-h-12 rounded-2xl bg-blue-500 px-6 text-sm font-semibold text-white transition hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300/50 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/30"
+            className="min-h-12 rounded-2xl bg-amber-200 px-6 text-sm font-semibold text-[#17202b] transition hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-200/50 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/30"
           >
             {isLoading ? "Thinking..." : "Ask AI"}
           </button>

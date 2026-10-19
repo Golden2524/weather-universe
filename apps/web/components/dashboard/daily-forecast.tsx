@@ -34,9 +34,9 @@ export function DailyForecast({
     .slice(0, 7)
 
   return (
-    <Card className="p-6">
+    <Card className="border-white/[0.09] bg-[#111a26]/75 p-5 sm:p-6">
       <div className="mb-6">
-        <p className="text-sm font-medium text-blue-300">
+        <p className="text-[11px] font-semibold tracking-[.2em] text-amber-200/80">
           7-DAY FORECAST
         </p>
 
@@ -72,7 +72,7 @@ export function DailyForecast({
               <div className="flex items-center gap-6">
                 <WeatherIcon
                   condition={day.condition}
-                  className="h-6 w-6 text-blue-300"
+                className="h-6 w-6 text-amber-100"
                 />
 
                 <div className="text-right">
@@ -91,7 +91,7 @@ export function DailyForecast({
                     </span>
                   </p>
 
-                  <p className="mt-1 text-xs text-blue-300">
+                  <p className="mt-1 text-xs text-sky-200/80">
                     {Math.round(
                       day.precipitationProbabilityMax
                     )}

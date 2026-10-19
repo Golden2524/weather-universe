@@ -336,11 +336,11 @@ export default function Home() {
         onTemperatureUnitChange={setTemperatureUnit}
       />
 
-      <div className="flex flex-1 flex-col gap-6 py-8">
+      <div className="flex flex-1 flex-col gap-8 py-7 sm:gap-10 sm:py-9">
         {isLoading && <WeatherLoading />}
 
         {error && (
-          <div className="rounded-3xl border border-red-400/20 bg-red-400/10 p-6 text-red-200">
+          <div role="alert" className="rounded-3xl border border-red-400/20 bg-red-400/10 p-6 text-red-200">
             {error}
           </div>
         )}
@@ -369,18 +369,17 @@ export default function Home() {
 
             {insights && (
               <section>
-                <div className="mb-4">
-                  <p className="text-sm font-medium text-blue-300">
-                    WEATHER INTELLIGENCE
+                <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                  <p className="text-[11px] font-semibold tracking-[.2em] text-amber-200/80">
+                    YOUR WEATHER BRIEFING
                   </p>
 
                   <h2 className="mt-1 text-2xl font-semibold tracking-tight">
-                    What does the atmosphere mean for you?
+                    Make the most of today.
                   </h2>
-
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-white/50">
-                    {insights.summary}
-                  </p>
+                  </div>
+                  <p className="max-w-xl text-sm leading-6 text-white/50">{insights.summary}</p>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-3">

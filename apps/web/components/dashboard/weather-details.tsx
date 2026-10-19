@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card"
+import { Droplets, Wind, CloudRain, Umbrella } from "lucide-react"
 
 interface WeatherDetailsProps {
   humidity: number
@@ -16,7 +17,7 @@ export function WeatherDetails({
   return (
     <section>
       <div className="mb-4">
-        <p className="text-sm font-medium text-blue-300">
+        <p className="text-[11px] font-semibold tracking-[.2em] text-amber-200/80">
           CURRENT CONDITIONS
         </p>
 
@@ -25,30 +26,34 @@ export function WeatherDetails({
         </h2>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="p-5">
-          <p className="text-sm text-white/50">Humidity</p>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.07]">
+          <Droplets className="h-5 w-5 text-sky-200" />
+          <p className="mt-4 text-sm text-white/50">Humidity</p>
           <p className="mt-3 text-3xl font-semibold">
             {Math.round(humidity)}%
           </p>
         </Card>
 
-        <Card className="p-5">
-          <p className="text-sm text-white/50">Wind speed</p>
+        <Card className="p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.07]">
+          <Wind className="h-5 w-5 text-teal-200" />
+          <p className="mt-4 text-sm text-white/50">Wind speed</p>
           <p className="mt-3 text-3xl font-semibold">
             {Math.round(windSpeed)} km/h
           </p>
         </Card>
 
-        <Card className="p-5">
-          <p className="text-sm text-white/50">Precipitation</p>
+        <Card className="p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.07]">
+          <CloudRain className="h-5 w-5 text-blue-200" />
+          <p className="mt-4 text-sm text-white/50">Precipitation</p>
           <p className="mt-3 text-3xl font-semibold">
             {precipitation} mm
           </p>
         </Card>
 
-        <Card className="p-5">
-          <p className="text-sm text-white/50">Rain probability</p>
+        <Card className="p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.07]">
+          <Umbrella className="h-5 w-5 text-indigo-200" />
+          <p className="mt-4 text-sm text-white/50">Rain probability</p>
           <p className="mt-3 text-3xl font-semibold">
             {Math.round(precipitationProbability)}%
           </p>

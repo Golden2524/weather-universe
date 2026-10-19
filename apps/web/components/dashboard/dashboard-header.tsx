@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Search, MapPin, RefreshCw } from "lucide-react"
+import { Search, MapPin, RefreshCw, CloudSun } from "lucide-react"
 
 import {
   searchLocations,
@@ -64,23 +64,23 @@ export function DashboardHeader({
   }
 
   return (
-    <header className="relative flex flex-col gap-4 border-b border-white/10 pb-6 lg:flex-row lg:items-center lg:justify-between">
-      <div>
-        <p className="text-sm text-white/50">
-          Atmospheric intelligence
-        </p>
-
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-          {location}
-        </h1>
+    <header className="relative flex flex-col gap-5 border-b border-white/[0.09] pb-6 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex items-center gap-3.5">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-amber-200/20 bg-amber-200/[0.08] text-amber-200 shadow-[0_0_36px_rgba(244,184,95,.12)]">
+          <CloudSun className="h-6 w-6" strokeWidth={1.6} />
+        </div>
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[.22em] text-amber-200/75">Weather Universe</p>
+          <h1 className="mt-1 text-lg font-semibold tracking-tight text-white">Your daily forecast</h1>
+        </div>
       </div>
 
-      <div className="flex w-full max-w-xl items-center gap-3">
-        <div className="flex shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-1">
+      <div className="flex w-full max-w-2xl items-center gap-2 sm:gap-3">
+          <div className="flex shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-[#111a26] p-1">
           <button
             onClick={() => onTemperatureUnitChange("C")}
             className={`rounded-xl px-3 py-2 text-sm font-medium transition ${temperatureUnit === "C"
-                ? "bg-blue-500 text-white"
+                ? "bg-amber-200 text-[#17202b]"
                 : "text-white/50 hover:text-white"
               }`}
             aria-label="Use Celsius"
@@ -91,7 +91,7 @@ export function DashboardHeader({
           <button
             onClick={() => onTemperatureUnitChange("F")}
             className={`rounded-xl px-3 py-2 text-sm font-medium transition ${temperatureUnit === "F"
-                ? "bg-blue-500 text-white"
+                ? "bg-amber-200 text-[#17202b]"
                 : "text-white/50 hover:text-white"
               }`}
             aria-label="Use Fahrenheit"
