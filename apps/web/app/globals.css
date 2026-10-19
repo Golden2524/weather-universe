@@ -26,3 +26,99 @@ body {
 ::selection { background: rgba(244, 184, 95, .3); color: white; }
 button, input { font: inherit; }
 button:focus-visible, input:focus-visible { outline: 2px solid #f4b85f; outline-offset: 3px; }
+
+.weather-atmosphere {
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 22% 0%, rgba(67, 126, 162, .16), transparent 43%),
+    radial-gradient(ellipse at 88% 35%, rgba(37, 94, 126, .10), transparent 42%);
+  transition: background 1.2s ease;
+}
+.weather-atmosphere::before,
+.weather-atmosphere::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  transition: opacity 1s ease, background 1s ease;
+}
+.weather-atmosphere[data-mood="rain"] {
+  background:
+    radial-gradient(ellipse at 82% 8%, rgba(92, 153, 184, .17), transparent 37%),
+    linear-gradient(155deg, #091522 0%, #0b1721 50%, #101920 100%);
+}
+.weather-atmosphere[data-mood="rain"]::before {
+  inset: -35% -25%;
+  opacity: .52;
+  background-image:
+    repeating-linear-gradient(108deg, transparent 0 23px, rgba(178, 218, 239, .18) 24px, transparent 25px 47px),
+    repeating-linear-gradient(108deg, transparent 0 61px, rgba(162, 207, 233, .12) 62px, transparent 63px 104px);
+  background-size: 190px 300px, 270px 400px;
+  mask-image: linear-gradient(to bottom, black, rgba(0,0,0,.66) 56%, transparent 100%);
+  animation: weather-rain-fall 1.25s linear infinite;
+}
+.weather-atmosphere[data-mood="rain"]::after {
+  background: radial-gradient(ellipse at 50% 4%, rgba(118, 165, 186, .08), transparent 54%);
+}
+.weather-atmosphere[data-mood="rain"][data-rain-intensity="light"]::before {
+  opacity: .24;
+  animation-duration: 2.3s;
+}
+.weather-atmosphere[data-mood="rain"][data-rain-intensity="heavy"]::before {
+  opacity: .72;
+  background-size: 150px 260px, 205px 340px;
+  animation-duration: .72s;
+}
+.weather-atmosphere[data-mood="storm"] {
+  background:
+    radial-gradient(ellipse at 82% 4%, rgba(145, 134, 181, .18), transparent 34%),
+    linear-gradient(145deg, #100f1b 0%, #0a111d 55%, #111923 100%);
+}
+.weather-atmosphere[data-mood="storm"]::before {
+  inset: -35% -25%;
+  opacity: .46;
+  background-image: repeating-linear-gradient(108deg, transparent 0 24px, rgba(196, 204, 231, .2) 25px, transparent 26px 48px);
+  background-size: 190px 300px;
+  mask-image: linear-gradient(to bottom, black, transparent 86%);
+  animation: weather-rain-fall .85s linear infinite;
+}
+.weather-atmosphere[data-mood="sunny"] {
+  background:
+    radial-gradient(ellipse at 78% 3%, rgba(255, 190, 99, .29), transparent 36%),
+    radial-gradient(ellipse at 23% 12%, rgba(236, 144, 72, .12), transparent 43%),
+    linear-gradient(150deg, #15151a 0%, #101722 48%, #101922 100%);
+}
+.weather-atmosphere[data-mood="sunny"]::before {
+  opacity: .76;
+  background: repeating-conic-gradient(from -14deg at 78% 2%, rgba(255, 208, 136, .065) 0deg 5deg, transparent 5deg 17deg);
+  mask-image: radial-gradient(ellipse at 78% 2%, black, transparent 57%);
+  animation: weather-sun-breathe 10s ease-in-out infinite alternate;
+}
+.weather-atmosphere[data-mood="warm"] {
+  background:
+    radial-gradient(ellipse at 80% 5%, rgba(250, 155, 76, .25), transparent 36%),
+    radial-gradient(ellipse at 16% 22%, rgba(209, 113, 69, .15), transparent 45%),
+    linear-gradient(145deg, #17141a 0%, #111721 56%, #161923 100%);
+}
+.weather-atmosphere[data-mood="warm"]::before {
+  opacity: .8;
+  background: radial-gradient(ellipse at 72% 12%, rgba(255, 189, 105, .12), transparent 40%);
+  animation: weather-sun-breathe 8s ease-in-out infinite alternate;
+}
+.weather-atmosphere[data-mood="cloudy"] {
+  background:
+    radial-gradient(ellipse at 72% 8%, rgba(141, 164, 177, .15), transparent 39%),
+    linear-gradient(150deg, #0d151d, #101923 55%, #11181f);
+}
+
+@keyframes weather-rain-fall {
+  from { transform: translate3d(35px, -70px, 0); }
+  to { transform: translate3d(-35px, 70px, 0); }
+}
+@keyframes weather-sun-breathe {
+  from { opacity: .42; transform: scale(1); }
+  to { opacity: .84; transform: scale(1.035); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .weather-atmosphere::before { animation: none !important; }
+}

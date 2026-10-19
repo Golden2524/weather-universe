@@ -10,6 +10,7 @@ import { HourlyForecast } from "@/components/dashboard/hourly-forecast"
 import { DailyForecast } from "@/components/dashboard/daily-forecast"
 import { WeatherLoading } from "@/components/dashboard/weather-loading"
 import { WeatherAssistant } from "@/components/dashboard/weather-assistant"
+import { OutdoorPlanner } from "@/components/dashboard/outdoor-planner"
 import { AppShell } from "@/components/layout/app-shell"
 
 import {
@@ -21,9 +22,14 @@ import {
 } from "@/lib/api"
 
 import type { TemperatureUnit } from "@/lib/temperature"
+import { getWeatherPresentation } from "@/lib/weather-presentation"
 
 interface WeatherData {
+  location: {
+    timezone: string
+  }
   current: {
+    time: string
     temperature: number
     feelsLike: number
     humidity: number
@@ -315,9 +321,19 @@ export default function Home() {
       }
       : null
 
+  const weatherPresentation = weather
+    ? getWeatherPresentation(
+        weather.current.condition,
+        weather.current.temperature,
+        weather.current.precipitation,
+        weather.current.weatherCode,
+        selectedLocation.name
+      )
+    : null
+
   if (!preferencesLoaded) {
     return (
-      <AppShell>
+      <AppShell mood={weatherPresentation?.mood} rainIntensity={weatherPresentation?.rainIntensity}>
         <div className="flex flex-1 items-center justify-center py-16">
           <WeatherLoading />
         </div>
@@ -326,7 +342,7 @@ export default function Home() {
   }
 
   return (
-    <AppShell>
+    <AppShell mood={weatherPresentation?.mood} rainIntensity={weatherPresentation?.rainIntensity}>
       <DashboardHeader
         location={selectedLocation.name}
         onLocationSelect={handleLocationSelect}
@@ -365,6 +381,9 @@ export default function Home() {
               }
               updatedAt={weather.updatedAt}
               temperatureUnit={temperatureUnit}
+              mood={weatherPresentation?.mood ?? "cool"}
+              conditionMessage={weatherPresentation?.conditionMessage ?? ""}
+              temperatureMessage={weatherPresentation?.temperatureMessage ?? ""}
             />
 
             {insights && (
@@ -412,6 +431,12 @@ export default function Home() {
                 </div>
               </section>
             )}
+
+            <OutdoorPlanner
+              hourly={weather.hourly}
+              currentTime={weather.current.time}
+              temperatureUnit={temperatureUnit}
+            />
 
             <HourlyForecast
               hourly={weather.hourly}

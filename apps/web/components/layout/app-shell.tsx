@@ -1,15 +1,19 @@
+import type { WeatherMood } from "@/lib/weather-presentation"
+
 interface AppShellProps {
   children: React.ReactNode
+  mood?: WeatherMood
+  rainIntensity?: "light" | "steady" | "heavy"
 }
 
 export function AppShell({
-  children
+  children,
+  mood = "cool",
+  rainIntensity = "steady"
 }: AppShellProps) {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#080d15] text-white">
-      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        <div className="absolute -top-64 left-1/3 h-[620px] w-[620px] rounded-full bg-amber-400/[0.07] blur-[150px]" />
-        <div className="absolute right-[-16%] top-[30%] h-[560px] w-[560px] rounded-full bg-sky-500/[0.08] blur-[150px]" />
+    <main className="relative min-h-screen overflow-hidden bg-[#080d15] text-white transition-colors duration-1000">
+      <div className="weather-atmosphere pointer-events-none absolute inset-0" data-mood={mood} data-rain-intensity={rainIntensity} aria-hidden="true">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.018)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.018)_1px,transparent_1px)] bg-[size:72px_72px] [mask-image:linear-gradient(to_bottom,black,transparent_70%)]" />
       </div>
 
