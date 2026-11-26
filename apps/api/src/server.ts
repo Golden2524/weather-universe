@@ -5,6 +5,7 @@ import cors from "@fastify/cors"
 import { locationRoutes } from "./modules/location/location.routes.js"
 import { weatherRoutes } from "./modules/weather/weather.routes.js"
 import { aiRoutes } from "./modules/ai/ai.routes.js"
+import { closeRateLimitStore, connectRateLimitStore } from "./plugins/rate-limit.js"
 
 const app = Fastify({
   logger: true,
@@ -12,6 +13,8 @@ const app = Fastify({
   // Public traffic reaches Render web services through Render's trusted edge proxy.
   trustProxy: true
 })
+
+app.addHook("onClose", closeRateLimitStore)
 
 const port = Number(process.env.PORT ?? 4000)
 const host = process.env.HOST ?? "0.0.0.0"
@@ -74,6 +77,7 @@ app.get("/health", async () => {
 })
 
 try {
+  await connectRateLimitStore()
   await app.listen({
     port,
     host
