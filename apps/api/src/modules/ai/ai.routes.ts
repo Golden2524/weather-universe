@@ -41,8 +41,44 @@ export async function aiRoutes(app: FastifyInstance) {
                   uvIndex: { type: "number", minimum: 0, maximum: 30 }
                 }
               },
-              hourly: { type: "array", maxItems: 48, items: { type: "object", maxProperties: 16 } },
-              daily: { type: "array", maxItems: 10, items: { type: "object", maxProperties: 16 } }
+              hourly: {
+                type: "array",
+                maxItems: 48,
+                items: {
+                  type: "object",
+                  required: ["time", "temperature", "precipitationProbability"],
+                  additionalProperties: false,
+                  properties: {
+                    time: { type: "string", maxLength: 40 },
+                    temperature: { type: "number", minimum: -100, maximum: 70 },
+                    feelsLike: { type: "number", minimum: -120, maximum: 80 },
+                    precipitationProbability: { type: "number", minimum: 0, maximum: 100 },
+                    precipitation: { type: "number", minimum: 0, maximum: 500 },
+                    weatherCode: { type: "integer", minimum: 0, maximum: 999 },
+                    condition: { type: "string", maxLength: 40 },
+                    windSpeed: { type: "number", minimum: 0, maximum: 500 }
+                  }
+                }
+              },
+              daily: {
+                type: "array",
+                maxItems: 10,
+                items: {
+                  type: "object",
+                  required: ["date", "temperatureMax", "temperatureMin"],
+                  additionalProperties: false,
+                  properties: {
+                    date: { type: "string", maxLength: 20 },
+                    weatherCode: { type: "integer", minimum: 0, maximum: 999 },
+                    condition: { type: "string", maxLength: 40 },
+                    temperatureMax: { type: "number", minimum: -100, maximum: 70 },
+                    temperatureMin: { type: "number", minimum: -120, maximum: 70 },
+                    precipitationProbabilityMax: { type: "number", minimum: 0, maximum: 100 },
+                    sunrise: { type: "string", maxLength: 40 },
+                    sunset: { type: "string", maxLength: 40 }
+                  }
+                }
+              }
             }
           }
         }

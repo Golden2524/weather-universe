@@ -15,8 +15,7 @@ const buckets = new Map<string, Bucket>()
 let lastCleanup = 0
 
 function clientKey(request: FastifyRequest, prefix: string) {
-  // Use the socket address rather than forwarded headers. Render's proxy headers
-  // are only trusted when the Fastify proxy trust setting is configured.
+  // server.ts enables Fastify proxy trust for requests arriving through Render.
   return `${prefix}:${request.ip}`
 }
 

@@ -8,7 +8,9 @@ import { aiRoutes } from "./modules/ai/ai.routes.js"
 
 const app = Fastify({
   logger: true,
-  bodyLimit: 32 * 1024
+  bodyLimit: 32 * 1024,
+  // Public traffic reaches Render web services through Render's trusted edge proxy.
+  trustProxy: true
 })
 
 const port = Number(process.env.PORT ?? 4000)
@@ -28,6 +30,15 @@ await app.register(cors, {
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type"],
   maxAge: 600
+})
+
+app.addHook("onSend", async (_request, reply) => {
+  reply.header("X-Content-Type-Options", "nosniff")
+  reply.header("X-Frame-Options", "DENY")
+  reply.header("Referrer-Policy", "no-referrer")
+  reply.header("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+  reply.header("Cross-Origin-Resource-Policy", "same-site")
+  reply.header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 })
 
 app.setErrorHandler((error: FastifyError, request, reply) => {
