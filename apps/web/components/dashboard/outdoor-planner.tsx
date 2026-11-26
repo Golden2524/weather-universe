@@ -20,6 +20,7 @@ interface OutdoorPlannerProps {
   hourly: ForecastHour[]
   currentTime: string
   temperatureUnit: TemperatureUnit
+  timezone: string
 }
 
 const activities: Record<Activity, { label: string; target: number; description: string }> = {
@@ -32,12 +33,12 @@ function forecastStamp(value: string) {
   return value.replace(" ", "T").slice(0, 16)
 }
 
-function formatForecastTime(value: string) {
+function formatForecastTime(value: string, timezone: string) {
   const date = new Date(`${forecastStamp(value)}:00Z`)
   return new Intl.DateTimeFormat(undefined, {
     hour: "numeric",
     minute: "2-digit",
-    timeZone: "UTC"
+    timeZone: timezone
   }).format(date)
 }
 
@@ -73,7 +74,7 @@ function scoreLabel(score: number) {
   return "Consider another time"
 }
 
-export function OutdoorPlanner({ hourly, currentTime, temperatureUnit }: OutdoorPlannerProps) {
+export function OutdoorPlanner({ hourly, currentTime, temperatureUnit, timezone }: OutdoorPlannerProps) {
   const [activity, setActivity] = useState<Activity>("walk")
 
   const windows = useMemo(() => {
@@ -150,7 +151,7 @@ export function OutdoorPlanner({ hourly, currentTime, temperatureUnit }: Outdoor
                   <p className="text-sm font-medium text-white/55">{index === 0 ? "Best match" : `Option ${index + 1}`}</p>
                   {index === 0 && <ArrowUpRight className="h-4 w-4 text-amber-200" />}
                 </div>
-                <p className="mt-3 text-xl font-semibold tracking-tight">{formatForecastTime(window.start)} <span className="text-white/35">—</span> {formatForecastTime(window.end)}</p>
+                <p className="mt-3 text-xl font-semibold tracking-tight">{formatForecastTime(window.start, timezone)} <span className="text-white/35">—</span> {formatForecastTime(window.end, timezone)}</p>
                 <p className="mt-1 text-xs text-emerald-200/80">{scoreLabel(window.score)} <span className="text-white/30">·</span> {window.score}% fit</p>
                 <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10" aria-label={`Weather fit ${window.score} percent`}>
                   <div className="h-full rounded-full bg-gradient-to-r from-amber-300 to-emerald-200" style={{ width: `${window.score}%` }} />

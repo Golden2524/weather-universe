@@ -24,6 +24,7 @@ interface OpenMeteoGeocodingResponse {
 
 const GEOCODING_URL =
   "https://geocoding-api.open-meteo.com/v1/search"
+const GEOCODING_TIMEOUT_MS = 5_000
 
 export async function searchLocations(
   query: string
@@ -35,9 +36,14 @@ export async function searchLocations(
     format: "json"
   })
 
-  const response = await fetch(
-    `${GEOCODING_URL}?${params.toString()}`
-  )
+  let response: Response
+  try {
+    response = await fetch(`${GEOCODING_URL}?${params.toString()}`, {
+      signal: AbortSignal.timeout(GEOCODING_TIMEOUT_MS)
+    })
+  } catch (error) {
+    throw new Error("Location provider request failed", { cause: error })
+  }
 
   if (!response.ok) {
     throw new Error(
@@ -45,14 +51,22 @@ export async function searchLocations(
     )
   }
 
-  const data =
-    (await response.json()) as OpenMeteoGeocodingResponse
+  let data: OpenMeteoGeocodingResponse
+  try {
+    data = (await response.json()) as OpenMeteoGeocodingResponse
+  } catch (error) {
+    throw new Error("Location provider returned invalid JSON", { cause: error })
+  }
 
   if (!data.results) {
     return []
   }
 
-  return data.results.map((location) => ({
+  return data.results.filter((location) =>
+    Number.isFinite(location.id) && Number.isFinite(location.latitude) &&
+    Number.isFinite(location.longitude) && typeof location.timezone === "string" &&
+    typeof location.name === "string" && typeof location.country === "string"
+  ).map((location) => ({
     id: location.id,
     name: location.name,
     country: location.country,

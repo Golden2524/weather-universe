@@ -67,6 +67,40 @@ export function getWeatherCondition(
 export function normalizeOpenMeteoWeather(
   data: OpenMeteoResponse
 ): WeatherData {
+  const hourly = data.hourly.time.flatMap((time, index) => {
+    const temperature = data.hourly.temperature_2m[index]
+    const feelsLike = data.hourly.apparent_temperature[index]
+    const precipitationProbability = data.hourly.precipitation_probability[index]
+    const precipitation = data.hourly.precipitation[index]
+    const weatherCode = data.hourly.weather_code[index]
+    const windSpeed = data.hourly.wind_speed_10m[index]
+
+    if (
+      !Number.isFinite(temperature) || !Number.isFinite(feelsLike) ||
+      !Number.isFinite(precipitationProbability) || !Number.isFinite(precipitation) ||
+      !Number.isFinite(weatherCode) || !Number.isFinite(windSpeed)
+    ) return []
+
+    return [{ time, temperature, feelsLike, precipitationProbability, precipitation, weatherCode, condition: getWeatherCondition(weatherCode), windSpeed }]
+  })
+
+  const daily = data.daily.time.flatMap((date, index) => {
+    const weatherCode = data.daily.weather_code[index]
+    const temperatureMax = data.daily.temperature_2m_max[index]
+    const temperatureMin = data.daily.temperature_2m_min[index]
+    const precipitationProbabilityMax = data.daily.precipitation_probability_max[index]
+    const sunrise = data.daily.sunrise[index]
+    const sunset = data.daily.sunset[index]
+
+    if (
+      !Number.isFinite(weatherCode) || !Number.isFinite(temperatureMax) ||
+      !Number.isFinite(temperatureMin) || !Number.isFinite(precipitationProbabilityMax) ||
+      typeof sunrise !== "string" || typeof sunset !== "string"
+    ) return []
+
+    return [{ date, weatherCode, condition: getWeatherCondition(weatherCode), temperatureMax, temperatureMin, precipitationProbabilityMax, sunrise, sunset }]
+  })
+
   return {
     location: {
       latitude: data.latitude,
@@ -89,36 +123,8 @@ export function normalizeOpenMeteoWeather(
       cloudCover: data.current.cloud_cover
     },
 
-    hourly: data.hourly.time.map((time, index) => ({
-      time,
-      temperature: data.hourly.temperature_2m[index],
-      feelsLike: data.hourly.apparent_temperature[index],
-      precipitationProbability:
-        data.hourly.precipitation_probability[index],
-      precipitation:
-        data.hourly.precipitation[index],
-      weatherCode: data.hourly.weather_code[index],
-      condition: getWeatherCondition(
-        data.hourly.weather_code[index]
-      ),
-      windSpeed: data.hourly.wind_speed_10m[index]
-    })),
-
-    daily: data.daily.time.map((date, index) => ({
-      date,
-      weatherCode: data.daily.weather_code[index],
-      condition: getWeatherCondition(
-        data.daily.weather_code[index]
-      ),
-      temperatureMax:
-        data.daily.temperature_2m_max[index],
-      temperatureMin:
-        data.daily.temperature_2m_min[index],
-      precipitationProbabilityMax:
-        data.daily.precipitation_probability_max[index],
-      sunrise: data.daily.sunrise[index],
-      sunset: data.daily.sunset[index]
-    })),
+    hourly,
+    daily,
 
     updatedAt: new Date().toISOString()
   }

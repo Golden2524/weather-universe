@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify"
+import { rateLimit } from "../../plugins/rate-limit.js"
 
 import {
   generateWeatherInsights,
@@ -6,8 +7,8 @@ import {
 } from "@weather-universe/weather-engine"
 
 interface WeatherQuery {
-  lat: string
-  lon: string
+  lat?: string
+  lon?: string
 }
 
 type ValidCoordinates = {
@@ -26,15 +27,15 @@ type CoordinateValidationResult =
   | InvalidCoordinates
 
 function validateCoordinates(
-  lat: string,
-  lon: string
+  lat?: string,
+  lon?: string
 ): CoordinateValidationResult {
-  const latitude = Number(lat)
-  const longitude = Number(lon)
+  const latitude = lat?.trim() ? Number(lat) : Number.NaN
+  const longitude = lon?.trim() ? Number(lon) : Number.NaN
 
   if (
-    Number.isNaN(latitude) ||
-    Number.isNaN(longitude)
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude)
   ) {
     return {
       valid: false,
@@ -73,6 +74,20 @@ export async function weatherRoutes(
    */
   app.get<{ Querystring: WeatherQuery }>(
     "/",
+    {
+      preHandler: rateLimit({ limit: 60, windowMs: 60_000, keyPrefix: "weather" }),
+      schema: {
+        querystring: {
+          type: "object",
+          required: ["lat", "lon"],
+          additionalProperties: false,
+          properties: {
+            lat: { type: "string", minLength: 1, maxLength: 32 },
+            lon: { type: "string", minLength: 1, maxLength: 32 }
+          }
+        }
+      }
+    },
     async (request, reply) => {
       const coordinates = validateCoordinates(
         request.query.lat,
@@ -102,6 +117,20 @@ export async function weatherRoutes(
    */
   app.get<{ Querystring: WeatherQuery }>(
     "/insights",
+    {
+      preHandler: rateLimit({ limit: 60, windowMs: 60_000, keyPrefix: "insights" }),
+      schema: {
+        querystring: {
+          type: "object",
+          required: ["lat", "lon"],
+          additionalProperties: false,
+          properties: {
+            lat: { type: "string", minLength: 1, maxLength: 32 },
+            lon: { type: "string", minLength: 1, maxLength: 32 }
+          }
+        }
+      }
+    },
     async (request, reply) => {
       const coordinates = validateCoordinates(
         request.query.lat,

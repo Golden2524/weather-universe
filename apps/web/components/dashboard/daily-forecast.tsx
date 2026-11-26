@@ -17,11 +17,13 @@ interface DailyForecastItem {
 interface DailyForecastProps {
   days: DailyForecastItem[]
   temperatureUnit: TemperatureUnit
+  timezone: string
 }
 
 export function DailyForecast({
   days,
-  temperatureUnit
+  temperatureUnit,
+  timezone
 }: DailyForecastProps) {
   const forecastDays = days
     .filter(
@@ -47,7 +49,7 @@ export function DailyForecast({
 
       <div className="space-y-3">
         {forecastDays.map((day) => {
-          const date = new Date(day.date)
+          const date = new Date(`${day.date}T12:00:00Z`)
 
           return (
             <div
@@ -58,13 +60,15 @@ export function DailyForecast({
                 <p className="text-sm font-medium">
                   {date.toLocaleDateString(undefined, {
                     weekday: "short"
+                  , timeZone: timezone
                   })}
                 </p>
 
                 <p className="text-xs text-white/40">
                   {date.toLocaleDateString(undefined, {
                     month: "short",
-                    day: "numeric"
+                    day: "numeric",
+                    timeZone: timezone
                   })}
                 </p>
               </div>

@@ -36,6 +36,15 @@ export interface OpenMeteoResponse {
   }
 }
 
+export class WeatherProviderError extends Error {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options)
+    this.name = "WeatherProviderError"
+  }
+}
+
+const REQUEST_TIMEOUT_MS = 8_000
+
 const BASE_URL = "https://api.open-meteo.com/v1/forecast"
 
 export async function getOpenMeteoWeather(
@@ -79,15 +88,45 @@ export async function getOpenMeteoWeather(
     forecast_days: "7"
   })
 
-  const response = await fetch(
-    `${BASE_URL}?${params.toString()}`
-  )
-
-  if (!response.ok) {
-    throw new Error(
-      `Open-Meteo request failed with status ${response.status}`
-    )
+  let response: Response
+  try {
+    response = await fetch(`${BASE_URL}?${params.toString()}`, {
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+    })
+  } catch (error) {
+    throw new WeatherProviderError("Weather provider request failed", { cause: error })
   }
 
-  return response.json() as Promise<OpenMeteoResponse>
+  if (!response.ok) {
+    throw new WeatherProviderError(`Weather provider returned status ${response.status}`)
+  }
+
+  let data: unknown
+  try {
+    data = await response.json()
+  } catch (error) {
+    throw new WeatherProviderError("Weather provider returned invalid JSON", { cause: error })
+  }
+
+  if (!isOpenMeteoResponse(data)) {
+    throw new WeatherProviderError("Weather provider response is missing required forecast data")
+  }
+
+  return data
+}
+
+function isOpenMeteoResponse(value: unknown): value is OpenMeteoResponse {
+  if (!value || typeof value !== "object") return false
+  const data = value as Partial<OpenMeteoResponse>
+  return Boolean(
+    Number.isFinite(data.latitude) &&
+    Number.isFinite(data.longitude) &&
+    typeof data.timezone === "string" &&
+    data.current && typeof data.current.time === "string" &&
+    Number.isFinite(data.current.temperature_2m) &&
+    Number.isFinite(data.current.weather_code) &&
+    data.hourly && Array.isArray(data.hourly.time) &&
+    Array.isArray(data.hourly.temperature_2m) &&
+    data.daily && Array.isArray(data.daily.time)
+  )
 }

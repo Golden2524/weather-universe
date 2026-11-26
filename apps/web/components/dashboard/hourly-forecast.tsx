@@ -13,11 +13,13 @@ interface HourlyForecastProps {
     condition: string
   }>
   temperatureUnit: TemperatureUnit
+  timezone: string
 }
 
 export function HourlyForecast({
   hourly,
-  temperatureUnit
+  temperatureUnit,
+  timezone
 }: HourlyForecastProps) {
   const forecast = hourly.slice(0, 12)
 
@@ -40,9 +42,10 @@ export function HourlyForecast({
             className="min-w-[128px] snap-start rounded-3xl border border-white/[0.09] bg-[#111a26]/80 p-4 transition hover:border-amber-200/25 hover:bg-white/[0.07] sm:min-w-[142px]"
           >
             <p className="text-sm text-white/50">
-              {new Date(hour.time).toLocaleTimeString([], {
+              {new Date(`${hour.time}:00Z`).toLocaleTimeString([], {
                 hour: "numeric",
-                minute: "2-digit"
+                minute: "2-digit",
+                timeZone: timezone
               })}
             </p>
 

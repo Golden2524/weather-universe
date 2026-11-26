@@ -226,21 +226,13 @@ export default function Home() {
 
         setError(null)
 
-        const [weatherData, insightsData] =
-          await Promise.all([
-            getWeather(
-              selectedLocation.latitude,
-              selectedLocation.longitude
-            ),
-
-            getWeatherInsights(
-              selectedLocation.latitude,
-              selectedLocation.longitude
-            )
-          ])
-
+        const weatherData = await getWeather(selectedLocation.latitude, selectedLocation.longitude)
         setWeather(weatherData)
-        setInsights(insightsData)
+        try {
+          setInsights(await getWeatherInsights(selectedLocation.latitude, selectedLocation.longitude))
+        } catch {
+          setInsights(null)
+        }
       } catch {
         setError(
           "Unable to load weather data. Please try again."
@@ -265,21 +257,13 @@ export default function Home() {
       setIsRefreshing(true)
       setError(null)
 
-      const [weatherData, insightsData] =
-        await Promise.all([
-          getWeather(
-            selectedLocation.latitude,
-            selectedLocation.longitude
-          ),
-
-          getWeatherInsights(
-            selectedLocation.latitude,
-            selectedLocation.longitude
-          )
-        ])
-
+      const weatherData = await getWeather(selectedLocation.latitude, selectedLocation.longitude)
       setWeather(weatherData)
-      setInsights(insightsData)
+      try {
+        setInsights(await getWeatherInsights(selectedLocation.latitude, selectedLocation.longitude))
+      } catch {
+        setInsights(null)
+      }
     } catch {
       setError(
         "Unable to refresh weather data. Please try again."
@@ -435,11 +419,13 @@ export default function Home() {
             <OutdoorPlanner
               hourly={weather.hourly}
               currentTime={weather.current.time}
+              timezone={weather.location.timezone}
               temperatureUnit={temperatureUnit}
             />
 
             <HourlyForecast
               hourly={weather.hourly}
+              timezone={weather.location.timezone}
               temperatureUnit={temperatureUnit}
             />
 
@@ -456,6 +442,7 @@ export default function Home() {
             {weather.daily && (
               <DailyForecast
                 days={weather.daily}
+                timezone={weather.location.timezone}
                 temperatureUnit={temperatureUnit}
               />
             )}

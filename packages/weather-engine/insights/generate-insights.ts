@@ -19,8 +19,8 @@ export function generateWeatherInsights(
 ): WeatherInsights {
   const current = weather.current
 
-  const nextHourRainProbability =
-    weather.hourly[0]?.precipitationProbability ?? 0
+  const nextHour = weather.hourly.find((hour) => hour.time > current.time)
+  const nextHourRainProbability = nextHour?.precipitationProbability ?? 0
 
   const comfort = calculateComfortScore(
     current.temperature,
