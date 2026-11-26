@@ -1,5 +1,5 @@
-import { Redis } from "ioredis"
 import type { FastifyReply, FastifyRequest } from "fastify"
+import { sharedRedis } from "./redis-client.js"
 
 interface RateLimitOptions {
   limit: number
@@ -12,16 +12,6 @@ interface Bucket {
   resetAt: number
 }
 
-const redisUrl = process.env.REDIS_URL
-const redis = redisUrl
-  ? new Redis(redisUrl, {
-      lazyConnect: true,
-      connectTimeout: 5_000,
-      maxRetriesPerRequest: 1,
-      enableOfflineQueue: false
-    })
-  : undefined
-
 const buckets = new Map<string, Bucket>()
 let lastCleanup = 0
 
@@ -32,25 +22,6 @@ if count == 1 then
 end
 return { count, redis.call("PTTL", KEYS[1]) }
 `
-
-/** Connect before the server starts so production never silently uses local counters. */
-export async function connectRateLimitStore() {
-  if (!redis) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("REDIS_URL is required in production for shared rate limiting")
-    }
-    return
-  }
-
-  await redis.connect()
-  await redis.ping()
-}
-
-export async function closeRateLimitStore() {
-  if (redis?.status === "ready") {
-    await redis.quit()
-  }
-}
 
 function clientKey(request: FastifyRequest, prefix: string) {
   // server.ts enables Fastify proxy trust for requests arriving through Render.
@@ -97,13 +68,13 @@ export function rateLimit(options: RateLimitOptions) {
   return async function enforceRateLimit(request: FastifyRequest, reply: FastifyReply) {
     const now = Date.now()
 
-    if (!redis) {
+    if (!sharedRedis) {
       return enforceLocalLimit(request, reply, options, now)
     }
 
     const key = clientKey(request, options.keyPrefix)
     try {
-      const [count, ttl] = await redis.eval(
+      const [count, ttl] = await sharedRedis.eval(
         incrementWithWindow,
         1,
         key,

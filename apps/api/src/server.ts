@@ -5,7 +5,7 @@ import cors from "@fastify/cors"
 import { locationRoutes } from "./modules/location/location.routes.js"
 import { weatherRoutes } from "./modules/weather/weather.routes.js"
 import { aiRoutes } from "./modules/ai/ai.routes.js"
-import { closeRateLimitStore, connectRateLimitStore } from "./plugins/rate-limit.js"
+import { closeSharedRedis, connectSharedRedis, sharedRedis } from "./plugins/redis-client.js"
 
 const app = Fastify({
   logger: true,
@@ -14,7 +14,7 @@ const app = Fastify({
   trustProxy: true
 })
 
-app.addHook("onClose", closeRateLimitStore)
+app.addHook("onClose", closeSharedRedis)
 
 const port = Number(process.env.PORT ?? 4000)
 const host = process.env.HOST ?? "0.0.0.0"
@@ -32,6 +32,7 @@ await app.register(cors, {
   origin: frontendOrigins,
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type"],
+  exposedHeaders: ["X-Weather-Cache"],
   maxAge: 600
 })
 
@@ -76,8 +77,26 @@ app.get("/health", async () => {
   }
 })
 
+app.get("/health/ready", async (_request, reply) => {
+  const rateLimitStoreReady = !process.env.REDIS_URL || sharedRedis?.status === "ready"
+  if (!rateLimitStoreReady) {
+    return reply.code(503).send({
+      status: "not_ready",
+      dependencies: { rateLimitStore: "unavailable" }
+    })
+  }
+
+  return {
+    status: "ready",
+    uptimeSeconds: Math.floor(process.uptime()),
+    dependencies: {
+      rateLimitStore: sharedRedis ? "ready" : "local-development"
+    }
+  }
+})
+
 try {
-  await connectRateLimitStore()
+  await connectSharedRedis()
   await app.listen({
     port,
     host

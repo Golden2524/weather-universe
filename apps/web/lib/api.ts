@@ -1,6 +1,57 @@
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000"
 
+const GET_TIMEOUT_MS = 20_000
+const RETRYABLE_HTTP_STATUSES = new Set([429, 500, 502, 503, 504])
+
+function wait(milliseconds: number, signal?: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort)
+      resolve()
+    }, milliseconds)
+    const onAbort = () => {
+      clearTimeout(timer)
+      reject(signal?.reason ?? new DOMException("Request cancelled", "AbortError"))
+    }
+    signal?.addEventListener("abort", onAbort, { once: true })
+  })
+}
+
+async function fetchWithRetry(url: string, signal?: AbortSignal) {
+  let response: Response | undefined
+  let lastError: unknown
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const timeoutSignal = AbortSignal.timeout(GET_TIMEOUT_MS)
+      const requestSignal = signal
+        ? AbortSignal.any([signal, timeoutSignal])
+        : timeoutSignal
+      response = await fetch(url, { signal: requestSignal, cache: "no-store" })
+      lastError = undefined
+
+      if (response.ok || !RETRYABLE_HTTP_STATUSES.has(response.status) || attempt === 1) {
+        return response
+      }
+
+      const retryAfter = Number(response.headers.get("retry-after"))
+      await wait(Number.isFinite(retryAfter) && retryAfter > 0
+        ? Math.min(2_000, retryAfter * 1_000)
+        : 250, signal)
+    } catch (error) {
+      if (signal?.aborted) throw error
+      lastError = error
+      if (attempt === 1) break
+      await wait(250, signal)
+    }
+  }
+
+  if (lastError instanceof Error) throw lastError
+  if (response) return response
+  throw new Error("The API request failed.")
+}
+
 export interface LocationResult {
   id: number
   name: string
@@ -81,10 +132,12 @@ export interface WeatherAssistantContext {
 }
 
 export async function searchLocations(
-  query: string
+  query: string,
+  signal?: AbortSignal
 ): Promise<LocationResult[]> {
-  const response = await fetch(
-    `${API_URL}/location/search?q=${encodeURIComponent(query)}`
+  const response = await fetchWithRetry(
+    `${API_URL}/location/search?q=${encodeURIComponent(query)}`,
+    signal
   )
 
   if (!response.ok) {
@@ -99,10 +152,12 @@ export async function searchLocations(
 
 export async function getWeather(
   latitude: number,
-  longitude: number
+  longitude: number,
+  signal?: AbortSignal
 ) {
-  const response = await fetch(
-    `${API_URL}/weather?lat=${latitude}&lon=${longitude}`
+  const response = await fetchWithRetry(
+    `${API_URL}/weather?lat=${latitude}&lon=${longitude}`,
+    signal
   )
 
   if (!response.ok) {
@@ -114,10 +169,12 @@ export async function getWeather(
 
 export async function getWeatherInsights(
   latitude: number,
-  longitude: number
+  longitude: number,
+  signal?: AbortSignal
 ) {
-  const response = await fetch(
-    `${API_URL}/weather/insights?lat=${latitude}&lon=${longitude}`
+  const response = await fetchWithRetry(
+    `${API_URL}/weather/insights?lat=${latitude}&lon=${longitude}`,
+    signal
   )
 
   if (!response.ok) {

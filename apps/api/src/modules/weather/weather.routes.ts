@@ -1,9 +1,9 @@
 import type { FastifyInstance } from "fastify"
 import { rateLimit } from "../../plugins/rate-limit.js"
+import { getCachedWeather } from "./weather.service.js"
 
 import {
-  generateWeatherInsights,
-  getWeather
+  generateWeatherInsights
 } from "@weather-universe/weather-engine"
 
 interface WeatherQuery {
@@ -100,12 +100,14 @@ export async function weatherRoutes(
         })
       }
 
-      const weather = await getWeather(
+      const result = await getCachedWeather(
         coordinates.latitude,
-        coordinates.longitude
+        coordinates.longitude,
+        request.log
       )
 
-      return weather
+      reply.header("X-Weather-Cache", result.cacheStatus)
+      return result.weather
     }
   )
 
@@ -143,13 +145,14 @@ export async function weatherRoutes(
         })
       }
 
-      const weather = await getWeather(
+      const result = await getCachedWeather(
         coordinates.latitude,
-        coordinates.longitude
+        coordinates.longitude,
+        request.log
       )
 
-      const insights =
-        generateWeatherInsights(weather)
+      reply.header("X-Weather-Cache", result.cacheStatus)
+      const insights = generateWeatherInsights(result.weather)
 
       return insights
     }

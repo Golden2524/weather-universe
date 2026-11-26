@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import dynamic from "next/dynamic"
 
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { IntelligenceCard } from "@/components/dashboard/intelligence-card"
@@ -9,9 +10,17 @@ import { WeatherDetails } from "@/components/dashboard/weather-details"
 import { HourlyForecast } from "@/components/dashboard/hourly-forecast"
 import { DailyForecast } from "@/components/dashboard/daily-forecast"
 import { WeatherLoading } from "@/components/dashboard/weather-loading"
-import { WeatherAssistant } from "@/components/dashboard/weather-assistant"
-import { OutdoorPlanner } from "@/components/dashboard/outdoor-planner"
 import { AppShell } from "@/components/layout/app-shell"
+
+const WeatherAssistant = dynamic(
+  () => import("@/components/dashboard/weather-assistant").then((module) => module.WeatherAssistant),
+  { loading: () => <div className="h-48 animate-pulse rounded-3xl border border-white/10 bg-white/[0.025]" aria-hidden="true" /> }
+)
+
+const OutdoorPlanner = dynamic(
+  () => import("@/components/dashboard/outdoor-planner").then((module) => module.OutdoorPlanner),
+  { loading: () => <div className="h-64 animate-pulse rounded-3xl border border-white/10 bg-white/[0.025]" aria-hidden="true" /> }
+)
 
 import {
   getBrowserLocation,
@@ -98,6 +107,26 @@ function formatCondition(condition: string) {
     .join(" ")
 }
 
+async function loadWeatherData(
+  latitude: number,
+  longitude: number,
+  signal?: AbortSignal
+) {
+  const [weatherResult, insightsResult] = await Promise.allSettled([
+    getWeather(latitude, longitude, signal),
+    getWeatherInsights(latitude, longitude, signal)
+  ])
+
+  if (weatherResult.status === "rejected") {
+    throw weatherResult.reason
+  }
+
+  return {
+    weather: weatherResult.value,
+    insights: insightsResult.status === "fulfilled" ? insightsResult.value : null
+  }
+}
+
 export default function Home() {
   const [selectedLocation, setSelectedLocation] =
     useState<LocationResult>(DEFAULT_LOCATION)
@@ -122,6 +151,8 @@ export default function Home() {
 
   const [error, setError] =
     useState<string | null>(null)
+
+  const refreshControllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     async function initializePreferences() {
@@ -211,71 +242,82 @@ export default function Home() {
       return
     }
 
-    async function loadWeather(
-      showLoading = false,
-      showRefreshing = false
-    ) {
+    const controller = new AbortController()
+    let requestPending = false
+    const loadForLocation = async (showLoading = false) => {
+      if (requestPending || controller.signal.aborted) return
+      requestPending = true
       try {
-        if (showLoading) {
-          setIsLoading(true)
-        }
-
-        if (showRefreshing) {
-          setIsRefreshing(true)
-        }
-
+        if (showLoading) setIsLoading(true)
         setError(null)
-
-        const weatherData = await getWeather(selectedLocation.latitude, selectedLocation.longitude)
-        setWeather(weatherData)
-        try {
-          setInsights(await getWeatherInsights(selectedLocation.latitude, selectedLocation.longitude))
-        } catch {
-          setInsights(null)
-        }
-      } catch {
-        setError(
-          "Unable to load weather data. Please try again."
+        const data = await loadWeatherData(
+          selectedLocation.latitude,
+          selectedLocation.longitude,
+          controller.signal
         )
+        if (controller.signal.aborted) return
+        setWeather(data.weather)
+        setInsights(data.insights)
+      } catch {
+        if (!controller.signal.aborted) {
+          setError("Unable to load weather data. Please try again.")
+        }
       } finally {
-        setIsLoading(false)
-        setIsRefreshing(false)
+        requestPending = false
+        if (!controller.signal.aborted) {
+          setIsLoading(false)
+          setIsRefreshing(false)
+        }
       }
     }
 
-    loadWeather(true)
+    // Keep this effect's requests tied to the selected location so late responses
+    // from an old city cannot replace the current forecast.
+    void loadForLocation(true)
 
     const interval = setInterval(() => {
-      loadWeather(false)
+      void loadForLocation()
     }, 300000)
 
-    return () => clearInterval(interval)
+    return () => {
+      clearInterval(interval)
+      controller.abort()
+    }
   }, [selectedLocation, preferencesLoaded])
 
   async function handleRefresh() {
+    const controller = new AbortController()
+    refreshControllerRef.current?.abort()
+    refreshControllerRef.current = controller
     try {
       setIsRefreshing(true)
       setError(null)
 
-      const weatherData = await getWeather(selectedLocation.latitude, selectedLocation.longitude)
-      setWeather(weatherData)
-      try {
-        setInsights(await getWeatherInsights(selectedLocation.latitude, selectedLocation.longitude))
-      } catch {
-        setInsights(null)
-      }
-    } catch {
-      setError(
-        "Unable to refresh weather data. Please try again."
+      const data = await loadWeatherData(
+        selectedLocation.latitude,
+        selectedLocation.longitude,
+        controller.signal
       )
+      if (controller.signal.aborted) return
+      setWeather(data.weather)
+      setInsights(data.insights)
+    } catch {
+      if (!controller.signal.aborted) {
+        setError("Unable to refresh weather data. Please try again.")
+      }
     } finally {
-      setIsRefreshing(false)
+      if (refreshControllerRef.current === controller) {
+        refreshControllerRef.current = null
+        setIsRefreshing(false)
+      }
     }
   }
 
   function handleLocationSelect(
     location: LocationResult
   ) {
+    refreshControllerRef.current?.abort()
+    refreshControllerRef.current = null
     setSelectedLocation(location)
 
     localStorage.setItem(
@@ -328,7 +370,6 @@ export default function Home() {
   return (
     <AppShell mood={weatherPresentation?.mood} rainIntensity={weatherPresentation?.rainIntensity}>
       <DashboardHeader
-        location={selectedLocation.name}
         onLocationSelect={handleLocationSelect}
         onRefresh={handleRefresh}
         isRefreshing={isRefreshing}

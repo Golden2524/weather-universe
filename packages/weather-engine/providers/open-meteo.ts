@@ -44,8 +44,13 @@ export class WeatherProviderError extends Error {
 }
 
 const REQUEST_TIMEOUT_MS = 8_000
+const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504])
 
 const BASE_URL = "https://api.open-meteo.com/v1/forecast"
+
+function wait(milliseconds: number) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds))
+}
 
 export async function getOpenMeteoWeather(
   latitude: number,
@@ -88,13 +93,34 @@ export async function getOpenMeteoWeather(
     forecast_days: "7"
   })
 
-  let response: Response
-  try {
-    response = await fetch(`${BASE_URL}?${params.toString()}`, {
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
-    })
-  } catch (error) {
-    throw new WeatherProviderError("Weather provider request failed", { cause: error })
+  let response: Response | undefined
+  let requestError: unknown
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      response = await fetch(`${BASE_URL}?${params.toString()}`, {
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+      })
+      requestError = undefined
+      if (response.ok || !RETRYABLE_STATUSES.has(response.status) || attempt === 1) break
+
+      const retryAfterSeconds = Number(response.headers.get("retry-after"))
+      const retryDelay = Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
+        ? Math.min(2_000, retryAfterSeconds * 1_000)
+        : 250
+      await wait(retryDelay)
+    } catch (error) {
+      requestError = error
+      if (attempt === 1) break
+      await wait(250)
+    }
+  }
+
+  if (requestError) {
+    throw new WeatherProviderError("Weather provider request failed", { cause: requestError })
+  }
+
+  if (!response) {
+    throw new WeatherProviderError("Weather provider request failed")
   }
 
   if (!response.ok) {

@@ -11,7 +11,6 @@ import {
 import type { TemperatureUnit } from "@/lib/temperature"
 
 interface DashboardHeaderProps {
-  location: string
   onLocationSelect: (location: LocationResult) => void
   onRefresh: () => void
   isRefreshing: boolean
@@ -22,7 +21,6 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({
-  location,
   onLocationSelect,
   onRefresh,
   isRefreshing,
@@ -34,8 +32,8 @@ export function DashboardHeader({
   const [isSearching, setIsSearching] = useState(false)
 
   useEffect(() => {
+    const controller = new AbortController()
     if (query.trim().length < 2) {
-      setResults([])
       return
     }
 
@@ -43,17 +41,20 @@ export function DashboardHeader({
       try {
         setIsSearching(true)
 
-        const locations = await searchLocations(query)
+        const locations = await searchLocations(query, controller.signal)
 
-        setResults(locations)
+        if (!controller.signal.aborted) setResults(locations)
       } catch {
-        setResults([])
+        if (!controller.signal.aborted) setResults([])
       } finally {
-        setIsSearching(false)
+        if (!controller.signal.aborted) setIsSearching(false)
       }
     }, 400)
 
-    return () => clearTimeout(timeout)
+    return () => {
+      clearTimeout(timeout)
+      controller.abort()
+    }
   }, [query])
 
   function handleSelect(location: LocationResult) {
@@ -118,9 +119,14 @@ export function DashboardHeader({
 
             <input
               value={query}
-              onChange={(event) =>
-                setQuery(event.target.value)
-              }
+              onChange={(event) => {
+                const nextQuery = event.target.value
+                setQuery(nextQuery)
+                setResults([])
+                if (nextQuery.trim().length < 2) {
+                  setIsSearching(false)
+                }
+              }}
               placeholder="Search a city..."
               className="w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-white/30"
             />
