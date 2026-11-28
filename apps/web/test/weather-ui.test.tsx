@@ -22,7 +22,12 @@ describe("Weather dashboard interactions", () => {
     const onLocationSelect = vi.fn()
     const user = userEvent.setup()
     render(<DashboardHeader onLocationSelect={onLocationSelect} onRefresh={vi.fn()} isRefreshing={false} temperatureUnit="C" onTemperatureUnitChange={vi.fn()} />)
-    await user.type(screen.getByPlaceholderText("Search a city..."), "Abuja")
+    await user.type(
+      screen.getByRole("combobox", {
+        name: "Search for a city or location"
+      }),
+      "Abuja"
+    )
     await waitFor(() => expect(searchLocations).toHaveBeenCalledWith("Abuja", expect.any(AbortSignal)), { timeout: 1500 })
     await user.click(await screen.findByText("Abuja"))
     expect(onLocationSelect).toHaveBeenCalledWith(expect.objectContaining({ name: "Abuja" }))
