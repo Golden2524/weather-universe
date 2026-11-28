@@ -10,6 +10,7 @@ import { weatherRoutes } from "./modules/weather/weather.routes.js"
 import { aiRoutes } from "./modules/ai/ai.routes.js"
 import type { WeatherContext } from "./modules/ai/ai.service.js"
 import { closeSharedRedis, connectSharedRedis, sharedRedis } from "./plugins/redis-client.js"
+import { getFrontendOrigins } from "./config/environment.js"
 
 export interface ServerDependencies {
   logger?: boolean
@@ -27,9 +28,7 @@ export async function buildServer(dependencies: ServerDependencies = {}) {
 
   app.addHook("onClose", closeSharedRedis)
 
-  const frontendOrigins = (process.env.FRONTEND_URL ?? "http://localhost:3000")
-    .split(",").map((origin) => origin.trim()).filter(Boolean)
-  if (frontendOrigins.length === 0) throw new Error("FRONTEND_URL must contain at least one allowed origin")
+  const frontendOrigins = getFrontendOrigins()
 
   await app.register(cors, {
     origin: frontendOrigins,
