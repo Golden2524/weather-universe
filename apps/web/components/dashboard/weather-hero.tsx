@@ -77,12 +77,12 @@ export function WeatherHero({ location, country, temperature, feelsLike, conditi
         <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="flex items-center gap-2 text-[11px] font-semibold tracking-[.2em] text-emerald-200/80">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,.8)]" />
+              <span aria-hidden="true" className="h-2 w-2 animate-pulse rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,.8)]" />
               LIVE CONDITIONS
             </div>
             <h2 className="mt-5 text-3xl font-semibold tracking-[-.04em] sm:text-5xl">{location}</h2>
-            <div className="mt-3 flex items-center gap-2 text-white/55">
-              <MapPin className="h-4 w-4 text-amber-200/80" />
+            <div className="mt-3 flex items-center gap-2 text-white/70">
+              <MapPin aria-hidden="true" className="h-4 w-4 text-amber-200/80" />
               <WeatherIcon condition={iconCondition} className={`h-5 w-5 ${style.icon}`} />
               <p className="text-base">{country} <span className="text-white/25">·</span> {condition}</p>
             </div>
@@ -99,19 +99,19 @@ export function WeatherHero({ location, country, temperature, feelsLike, conditi
             <div className="flex items-center gap-3">
               <WeatherIcon condition={iconCondition} className={`h-12 w-12 ${style.icon} sm:h-16 sm:w-16`} />
               <div>
-                <p className="text-xs uppercase tracking-[.16em] text-white/45">Right now</p>
+              <p className="text-xs uppercase tracking-[.16em] text-white/65">Right now</p>
                 <p className="mt-1 text-6xl font-semibold tracking-[-.07em] sm:text-8xl">{formatTemperature(temperature, temperatureUnit)}</p>
               </div>
             </div>
-            <div className="pb-1 text-sm text-white/55">
+            <div className="pb-1 text-sm text-white/70">
               <p>Feels <span className="text-white">{formatTemperature(feelsLike, temperatureUnit)}</span></p>
               <p className="mt-2">High <span className="text-white">{formatTemperature(high, temperatureUnit)}</span></p>
               <p className="mt-1">Low <span className="text-white">{formatTemperature(low, temperatureUnit)}</span></p>
             </div>
           </div>
         </div>
-        <p className="mt-6 flex items-center gap-2 text-xs text-white/40">
-          <Sparkles className="h-3.5 w-3.5 text-amber-200/70" /> Updated at {new Date(updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+        <p className="mt-6 flex items-center gap-2 text-xs text-white/65">
+          <Sparkles aria-hidden="true" className="h-3.5 w-3.5 text-amber-200/70" /> Updated at <time dateTime={updatedAt}>{new Date(updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>
         </p>
       </div>
     </Card>

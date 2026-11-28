@@ -25,7 +25,7 @@ body {
 }
 ::selection { background: rgba(244, 184, 95, .3); color: white; }
 button, input { font: inherit; }
-button:focus-visible, input:focus-visible { outline: 2px solid #f4b85f; outline-offset: 3px; }
+button:focus-visible, input:focus-visible, a:focus-visible, [tabindex="0"]:focus-visible { outline: 2px solid #f4b85f; outline-offset: 3px; }
 
 .weather-atmosphere {
   overflow: hidden;
@@ -120,5 +120,12 @@ button:focus-visible, input:focus-visible { outline: 2px solid #f4b85f; outline-
   to { opacity: .84; transform: scale(1.035); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .weather-atmosphere::before { animation: none !important; }
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

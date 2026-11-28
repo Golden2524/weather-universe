@@ -149,11 +149,11 @@ export function OutdoorPlanner({ hourly, currentTime, temperatureUnit, timezone 
               <article key={window.start} className={`rounded-2xl border p-4 ${index === 0 ? "border-amber-200/25 bg-amber-200/[0.07]" : "border-white/[0.08] bg-white/[0.025]"}`}>
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-medium text-white/55">{index === 0 ? "Best match" : `Option ${index + 1}`}</p>
-                  {index === 0 && <ArrowUpRight className="h-4 w-4 text-amber-200" />}
+                  {index === 0 && <ArrowUpRight aria-hidden="true" className="h-4 w-4 text-amber-200" />}
                 </div>
-                <p className="mt-3 text-xl font-semibold tracking-tight">{formatForecastTime(window.start, timezone)} <span className="text-white/35">—</span> {formatForecastTime(window.end, timezone)}</p>
-                <p className="mt-1 text-xs text-emerald-200/80">{scoreLabel(window.score)} <span className="text-white/30">·</span> {window.score}% fit</p>
-                <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10" aria-label={`Weather fit ${window.score} percent`}>
+                <p className="mt-3 text-xl font-semibold tracking-tight">{formatForecastTime(window.start, timezone)} <span aria-hidden="true" className="text-white/55">—</span> {formatForecastTime(window.end, timezone)}</p>
+                <p className="mt-1 text-xs text-emerald-200/80">{scoreLabel(window.score)} <span aria-hidden="true" className="text-white/55">·</span> {window.score}% fit</p>
+                <div role="meter" aria-label="Weather fit" aria-valuemin={0} aria-valuemax={100} aria-valuenow={window.score} className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
                   <div className="h-full rounded-full bg-gradient-to-r from-amber-300 to-emerald-200" style={{ width: `${window.score}%` }} />
                 </div>
                 <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-white/50">
@@ -169,8 +169,8 @@ export function OutdoorPlanner({ hourly, currentTime, temperatureUnit, timezone 
         )}
 
         <div className="mt-5 flex items-start gap-3 border-t border-white/[0.08] pt-4">
-          <ActivityIcon className="mt-0.5 h-4 w-4 shrink-0 text-amber-200/80" />
-          <p className="text-xs leading-5 text-white/40">{activities[activity].description} The fit score is a planning aid based on forecast conditions, not a safety alert.</p>
+          <ActivityIcon aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-amber-200/80" />
+          <p className="text-xs leading-5 text-white/65">{activities[activity].description} The fit score is a planning aid based on forecast conditions, not a safety alert.</p>
         </div>
       </Card>
     </section>

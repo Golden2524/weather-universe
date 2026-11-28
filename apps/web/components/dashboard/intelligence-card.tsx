@@ -26,7 +26,7 @@ export function IntelligenceCard({
 
       <div className="mt-5 flex items-end justify-between gap-4">
         <p className="text-5xl font-semibold tracking-tight">
-          {score}
+          {score}<span className="sr-only"> out of 100</span>
         </p>
 
         <p className="pb-2 text-sm text-blue-300">
@@ -34,7 +34,7 @@ export function IntelligenceCard({
         </p>
       </div>
 
-      <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
+      <div role="meter" aria-label={`${label} score`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={score} className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
         <div
           className="h-full rounded-full bg-gradient-to-r from-amber-300 to-emerald-200 transition-all"
           style={{

@@ -112,7 +112,7 @@ export function WeatherAssistant({
             </p>
           </div>
 
-          <div className="shrink-0 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/40">
+          <div className="shrink-0 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/65">
             {weather.location}
           </div>
         </div>
@@ -138,13 +138,13 @@ export function WeatherAssistant({
             placeholder="e.g. Will I need an umbrella this afternoon?"
             disabled={isLoading}
             autoComplete="off"
-            className="min-h-12 min-w-0 flex-1 rounded-2xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-blue-400/50 focus:bg-black/30 focus:ring-2 focus:ring-blue-400/10 disabled:cursor-not-allowed disabled:opacity-60"
+            className="min-h-12 min-w-0 flex-1 rounded-2xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none transition placeholder:text-white/55 focus:border-blue-400/50 focus:bg-black/30 focus:ring-2 focus:ring-blue-400/10 disabled:cursor-not-allowed disabled:opacity-60"
           />
 
           <button
             type="submit"
             disabled={isLoading || !question.trim()}
-            className="min-h-12 rounded-2xl bg-amber-200 px-6 text-sm font-semibold text-[#17202b] transition hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-200/50 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/30"
+            className="min-h-12 rounded-2xl bg-amber-200 px-6 text-sm font-semibold text-[#17202b] transition hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-200/50 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/55"
           >
             {isLoading ? "Thinking..." : "Ask AI"}
           </button>
@@ -153,11 +153,11 @@ export function WeatherAssistant({
         {!answer && !error && !isLoading && (
           <div className="mt-6">
             <div className="mb-3 flex items-center justify-between">
-              <p className="text-xs font-medium uppercase tracking-[0.16em] text-white/30">
+              <p className="text-xs font-medium uppercase tracking-[0.16em] text-white/65">
                 Try asking
               </p>
 
-              <p className="hidden text-xs text-white/20 sm:block">
+              <p className="hidden text-xs text-white/65 sm:block">
                 Powered by your live dashboard data
               </p>
             </div>
@@ -235,14 +235,14 @@ export function WeatherAssistant({
               <button
                 type="button"
                 onClick={handleClear}
-                className="self-start rounded-lg px-2 py-1 text-xs text-white/30 transition hover:bg-white/5 hover:text-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400/30"
+                className="self-start rounded-lg px-2 py-1 text-xs text-white/65 transition hover:bg-white/5 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400/30"
               >
                 Ask another
               </button>
             </div>
 
             <div className="mt-4 border-t border-white/5 pt-4">
-              <p className="text-xs font-medium text-white/30">
+              <p className="text-xs font-medium text-white/65">
                 Your question
               </p>
 
@@ -294,7 +294,7 @@ export function WeatherAssistant({
                   <button
                     type="button"
                     onClick={handleClear}
-                    className="rounded-xl px-4 py-2 text-xs font-medium text-white/35 transition hover:bg-white/5 hover:text-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400/30"
+                    className="rounded-xl px-4 py-2 text-xs font-medium text-white/65 transition hover:bg-white/5 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400/30"
                   >
                     Clear
                   </button>
