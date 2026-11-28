@@ -25,7 +25,9 @@ test("deployed dashboard fetches real weather and location data from the API", a
   expect(apiOrigin).not.toBe(frontendOrigin)
   await expect(page.getByRole("heading", { name: "Lagos", exact: true })).toBeVisible()
 
-  await page.getByPlaceholder("Search a city...").fill("Abuja")
+  await page.getByRole("combobox", {
+    name: "Search for a city or location"
+  }).fill("Abuja")
   await expect.poll(() => apiResponses.some((response) =>
     new URL(response.url()).pathname.endsWith(LOCATION_PATH) && response.url().includes("q=Abuja")
   ), { timeout: 30_000 }).toBe(true)
@@ -46,7 +48,17 @@ test("deployed dashboard fetches real weather and location data from the API", a
   if (!abuja) throw new Error("The location API did not return the Abuja Federal Capital Territory result")
 
   const previousWeatherCount = apiResponses.filter((response) => new URL(response.url()).pathname.endsWith(WEATHER_PATH)).length
-  await page.getByRole("button", { name: /Abuja FCT, Nigeria/ }).first().click()
+  console.log(
+    "Visible buttons:",
+    await page.getByRole("button").allTextContents()
+  )
+  await page
+    .getByRole("listbox", { name: "Location search results" })
+    .getByRole("option")
+    .filter({ hasText: "Abuja" })
+    .filter({ hasText: "FCT, Nigeria" })
+    .first()
+    .click()
   await expect.poll(() => apiResponses.filter((response) => new URL(response.url()).pathname.endsWith(WEATHER_PATH)).length, { timeout: 60_000 }).toBeGreaterThan(previousWeatherCount)
   const selectedWeatherResponse = apiResponses.filter((response) => new URL(response.url()).pathname.endsWith(WEATHER_PATH)).at(-1)
   expect(selectedWeatherResponse).toBeDefined()
