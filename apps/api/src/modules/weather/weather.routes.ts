@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify"
 import { rateLimit } from "../../plugins/rate-limit.js"
 import { getCachedWeather } from "./weather.service.js"
+import type { WeatherData } from "@weather-universe/types"
 
 import {
   generateWeatherInsights
@@ -63,9 +64,9 @@ function validateCoordinates(
   }
 }
 
-export async function weatherRoutes(
-  app: FastifyInstance
-) {
+type WeatherRoutesOptions = { getWeather?: (latitude: number, longitude: number) => Promise<WeatherData> }
+
+export async function weatherRoutes(app: FastifyInstance, options: WeatherRoutesOptions = {}) {
   /**
    * GET /weather
    *
@@ -100,11 +101,9 @@ export async function weatherRoutes(
         })
       }
 
-      const result = await getCachedWeather(
-        coordinates.latitude,
-        coordinates.longitude,
-        request.log
-      )
+      const result = options.getWeather
+        ? { weather: await options.getWeather(coordinates.latitude, coordinates.longitude), cacheStatus: "miss" as const }
+        : await getCachedWeather(coordinates.latitude, coordinates.longitude, request.log)
 
       reply.header("X-Weather-Cache", result.cacheStatus)
       return result.weather
@@ -145,11 +144,9 @@ export async function weatherRoutes(
         })
       }
 
-      const result = await getCachedWeather(
-        coordinates.latitude,
-        coordinates.longitude,
-        request.log
-      )
+      const result = options.getWeather
+        ? { weather: await options.getWeather(coordinates.latitude, coordinates.longitude), cacheStatus: "miss" as const }
+        : await getCachedWeather(coordinates.latitude, coordinates.longitude, request.log)
 
       reply.header("X-Weather-Cache", result.cacheStatus)
       const insights = generateWeatherInsights(result.weather)

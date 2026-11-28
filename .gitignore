@@ -10,6 +10,9 @@ node_modules/
 dist/
 .next/
 out/
+.turbo/
+apps/web/test-results/
+apps/web/playwright-report/
 
 # Logs
 *.log

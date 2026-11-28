@@ -7,8 +7,11 @@ interface LocationSearchQuery {
   q?: string
 }
 
+type LocationRoutesOptions = { searchLocations?: typeof searchLocations }
+
 export async function locationRoutes(
-  app: FastifyInstance
+  app: FastifyInstance,
+  options: LocationRoutesOptions = {}
 ) {
   app.get<{ Querystring: LocationSearchQuery }>(
     "/search",
@@ -32,7 +35,7 @@ export async function locationRoutes(
         })
       }
 
-      const locations = await searchLocations(query)
+      const locations = await (options.searchLocations ?? searchLocations)(query)
 
       return {
         query,

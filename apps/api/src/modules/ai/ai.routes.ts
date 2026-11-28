@@ -11,7 +11,9 @@ type AskRequest = {
   weather?: WeatherContext
 }
 
-export async function aiRoutes(app: FastifyInstance) {
+type AiRoutesOptions = { askWeatherAssistant?: typeof askWeatherAssistant }
+
+export async function aiRoutes(app: FastifyInstance, options: AiRoutesOptions = {}) {
   app.post<{ Body: AskRequest }>("/ask", {
     bodyLimit: 32 * 1024,
     preHandler: rateLimit({ limit: 8, windowMs: 60_000, keyPrefix: "ai" }),
@@ -93,7 +95,7 @@ export async function aiRoutes(app: FastifyInstance) {
     }
 
     try {
-      const answer = await askWeatherAssistant(
+      const answer = await (options.askWeatherAssistant ?? askWeatherAssistant)(
         question,
         weather
       )
