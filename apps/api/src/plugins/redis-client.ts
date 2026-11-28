@@ -26,7 +26,7 @@ export async function connectSharedRedis() {
 }
 
 export async function closeSharedRedis() {
-  if (sharedRedis?.status === "ready") {
-    await sharedRedis.quit()
-  }
+  if (!sharedRedis) return
+  if (sharedRedis.status === "ready") await sharedRedis.quit()
+  else sharedRedis.disconnect()
 }

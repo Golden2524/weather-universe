@@ -1,6 +1,6 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { buildServer } from "../src/server.js"
+import { buildServer, createShutdownHandler } from "../src/server.js"
 import type { WeatherData } from "@weather-universe/types"
 
 const weather: WeatherData = {
@@ -81,4 +81,20 @@ test("health and readiness return useful status with security headers", async ()
     assert.equal(health.headers["x-content-type-options"], "nosniff")
     assert.equal(health.headers["x-frame-options"], "DENY")
   } finally { await app.close() }
+})
+
+test("shutdown handler closes the API once when repeated signals arrive", async () => {
+  const app = await buildServer({ logger: false })
+  let closeCalls = 0
+  const originalClose = app.close.bind(app)
+  app.close = async () => {
+    closeCalls += 1
+    return originalClose()
+  }
+  const shutdown = createShutdownHandler(app)
+
+  await Promise.all([shutdown("SIGTERM"), shutdown("SIGINT")])
+
+  assert.equal(closeCalls, 1)
+  assert.equal(app.server.listening, false)
 })

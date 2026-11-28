@@ -2,6 +2,7 @@ import Fastify from "fastify"
 import { resolve } from "node:path"
 import { pathToFileURL } from "node:url"
 import type { FastifyError } from "fastify"
+import type { FastifyInstance } from "fastify"
 import cors from "@fastify/cors"
 import type { WeatherData } from "@weather-universe/types"
 import { locationRoutes } from "./modules/location/location.routes.js"
@@ -72,11 +73,39 @@ async function start() {
   const app = await buildServer()
   try {
     await connectSharedRedis()
-    await app.listen({ port: Number(process.env.PORT ?? 4000), host: process.env.HOST ?? "0.0.0.0" })
+    const address = await app.listen({ port: Number(process.env.PORT ?? 4000), host: process.env.HOST ?? "0.0.0.0" })
+    app.log.info({ address, health: "/health", readiness: "/health/ready" }, "Weather Universe API listening")
+    installShutdownHandlers(app)
   } catch (error) {
-    app.log.error(error)
-    process.exit(1)
+    app.log.error({ err: error }, "Weather Universe API startup failed")
+    await app.close().catch((closeError) => app.log.error({ err: closeError }, "Failed to close API after startup failure"))
+    process.exitCode = 1
   }
+}
+
+/** Close the listener and its dependencies cleanly when the platform stops the instance. */
+export function createShutdownHandler(app: FastifyInstance) {
+  let shutdown: Promise<void> | undefined
+
+  return (signal: NodeJS.Signals) => {
+    if (shutdown) return shutdown
+
+    app.log.info({ signal }, "Weather Universe API shutdown requested")
+    shutdown = app.close()
+      .then(() => app.log.info({ signal }, "Weather Universe API shutdown complete"))
+      .catch((error: unknown) => {
+        app.log.error({ err: error, signal }, "Weather Universe API shutdown failed")
+        process.exitCode = 1
+      })
+
+    return shutdown
+  }
+}
+
+function installShutdownHandlers(app: FastifyInstance) {
+  const shutdown = createShutdownHandler(app)
+  process.once("SIGTERM", () => { void shutdown("SIGTERM") })
+  process.once("SIGINT", () => { void shutdown("SIGINT") })
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
