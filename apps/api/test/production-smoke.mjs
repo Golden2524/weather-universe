@@ -1,3 +1,5 @@
+import { randomInt } from "node:crypto"
+
 const baseUrl = (process.env.API_BASE_URL ?? "https://weather-universe.onrender.com").replace(/\/$/, "")
 const results = []
 
@@ -17,9 +19,15 @@ async function probe(path, expectedStatus = 200) {
 }
 
 await probe("/health/ready")
-const weatherPath = "/weather?lat=9.0579&lon=7.4951"
+const latitude = (9 + randomInt(0, 1_000_000) / 10_000_000).toFixed(5)
+const longitude = (7 + randomInt(0, 1_000_000) / 10_000_000).toFixed(5)
+const weatherPath = `/weather?lat=${latitude}&lon=${longitude}`
 const firstWeather = await probe(weatherPath)
 if (!firstWeather.body?.current || !Array.isArray(firstWeather.body?.daily)) throw new Error("Weather response is missing expected forecast fields")
 const secondWeather = await probe(weatherPath)
-await probe("/weather/insights?lat=9.0579&lon=7.4951")
-console.log(JSON.stringify({ baseUrl, probes: results, cacheHeaderFirst: firstWeather.response.headers.get("x-weather-cache"), cacheHeaderSecond: secondWeather.response.headers.get("x-weather-cache") }, null, 2))
+const firstCacheStatus = firstWeather.response.headers.get("x-weather-cache")
+const secondCacheStatus = secondWeather.response.headers.get("x-weather-cache")
+if (firstCacheStatus !== "miss") throw new Error(`Expected first weather request to miss cache, received ${firstCacheStatus}`)
+if (secondCacheStatus !== "hit") throw new Error(`Expected second weather request to hit cache, received ${secondCacheStatus}`)
+await probe(`/weather/insights?lat=${latitude}&lon=${longitude}`)
+console.log(JSON.stringify({ baseUrl, probes: results, cacheHeaderFirst: firstCacheStatus, cacheHeaderSecond: secondCacheStatus }, null, 2))

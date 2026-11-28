@@ -1,4 +1,5 @@
 import type { FastifyBaseLogger } from "fastify"
+import type { Redis } from "ioredis"
 import { getWeather } from "@weather-universe/weather-engine"
 import { sharedRedis } from "../../plugins/redis-client.js"
 
@@ -15,8 +16,14 @@ interface LocalWeatherEntry {
   staleUntil: number
 }
 
-const localCache = new Map<string, LocalWeatherEntry>()
-const inFlight = new Map<string, Promise<{ weather: Weather; cacheStatus: WeatherCacheStatus }>>()
+export interface WeatherCacheOptions {
+  fetchWeather?: (latitude: number, longitude: number) => Promise<Weather>
+  redis?: Pick<Redis, "status" | "mget" | "set"> | null
+  now?: () => number
+  freshTtlMs?: number
+  staleTtlMs?: number
+  maxLocalEntries?: number
+}
 
 function cacheKey(latitude: number, longitude: number) {
   // Weather grids have much lower spatial precision than four decimal places.
@@ -32,86 +39,101 @@ function parseWeather(value: string | null): Weather | null {
   }
 }
 
-function saveLocal(key: string, weather: Weather, now: number) {
-  localCache.delete(key)
-  localCache.set(key, {
-    weather,
-    freshUntil: now + WEATHER_FRESH_TTL_SECONDS * 1000,
-    staleUntil: now + WEATHER_STALE_TTL_SECONDS * 1000
-  })
+export function createWeatherCache(options: WeatherCacheOptions = {}) {
+  const fetchWeather = options.fetchWeather ?? getWeather
+  const redis = options.redis === undefined ? sharedRedis : options.redis
+  const now = options.now ?? Date.now
+  const freshTtlMs = options.freshTtlMs ?? WEATHER_FRESH_TTL_SECONDS * 1000
+  const staleTtlMs = options.staleTtlMs ?? WEATHER_STALE_TTL_SECONDS * 1000
+  const maxLocalEntries = options.maxLocalEntries ?? MAX_LOCAL_CACHE_ENTRIES
+  const localCache = new Map<string, LocalWeatherEntry>()
+  const inFlight = new Map<string, Promise<{ weather: Weather; cacheStatus: WeatherCacheStatus }>>()
 
-  while (localCache.size > MAX_LOCAL_CACHE_ENTRIES) {
-    const oldestKey = localCache.keys().next().value
-    if (oldestKey === undefined) break
-    localCache.delete(oldestKey)
+  function saveLocal(key: string, weather: Weather, timestamp: number) {
+    localCache.delete(key)
+    localCache.set(key, {
+      weather,
+      freshUntil: timestamp + freshTtlMs,
+      staleUntil: timestamp + staleTtlMs
+    })
+
+    while (localCache.size > maxLocalEntries) {
+      const oldestKey = localCache.keys().next().value
+      if (oldestKey === undefined) break
+      localCache.delete(oldestKey)
+    }
   }
-}
 
-export async function getCachedWeather(
-  latitude: number,
-  longitude: number,
-  logger: FastifyBaseLogger
-): Promise<{ weather: Weather; cacheStatus: WeatherCacheStatus }> {
-  const key = cacheKey(latitude, longitude)
-  const freshKey = `${key}:fresh`
-  const staleKey = `${key}:stale`
-  const now = Date.now()
-  let staleWeather: Weather | null = null
-  const localEntry = localCache.get(key)
+  async function getCachedWeather(
+    latitude: number,
+    longitude: number,
+    logger: FastifyBaseLogger
+  ): Promise<{ weather: Weather; cacheStatus: WeatherCacheStatus }> {
+    const key = cacheKey(latitude, longitude)
+    const freshKey = `${key}:fresh`
+    const staleKey = `${key}:stale`
+    const timestamp = now()
+    let staleWeather: Weather | null = null
+    const localEntry = localCache.get(key)
 
-  if (sharedRedis?.status === "ready") {
-    try {
-      const [freshValue, staleValue] = await sharedRedis.mget(freshKey, staleKey)
-      const freshWeather = parseWeather(freshValue)
-      if (freshWeather) {
-        return { weather: freshWeather, cacheStatus: "hit" }
+    if (redis?.status === "ready") {
+      try {
+        const [freshValue, staleValue] = await redis.mget(freshKey, staleKey)
+        const freshWeather = parseWeather(freshValue)
+        if (freshWeather) return { weather: freshWeather, cacheStatus: "hit" }
+        staleWeather = parseWeather(staleValue)
+      } catch (error) {
+        logger.warn({ err: error }, "Weather cache read failed; fetching from provider")
       }
-      staleWeather = parseWeather(staleValue)
-    } catch (error) {
-      logger.warn({ err: error }, "Weather cache read failed; fetching from provider")
     }
-  }
 
-  if (localEntry && localEntry.staleUntil > now) {
-    if (localEntry.freshUntil > now) {
-      return { weather: localEntry.weather, cacheStatus: "hit" }
+    if (localEntry && localEntry.staleUntil > timestamp) {
+      if (localEntry.freshUntil > timestamp) {
+        return { weather: localEntry.weather, cacheStatus: "hit" }
+      }
+      staleWeather ??= localEntry.weather
     }
-    staleWeather ??= localEntry.weather
-  }
 
-  const pending = inFlight.get(key)
-  if (pending) return pending
+    const pending = inFlight.get(key)
+    if (pending) return pending
 
-  const load = (async () => {
-    try {
-      const weather = await getWeather(latitude, longitude)
-      saveLocal(key, weather, Date.now())
+    const load = (async () => {
+      try {
+        const weather = await fetchWeather(latitude, longitude)
+        saveLocal(key, weather, now())
 
-      if (sharedRedis?.status === "ready") {
-        const value = JSON.stringify(weather)
-        const writes = await Promise.allSettled([
-          sharedRedis.set(freshKey, value, "EX", WEATHER_FRESH_TTL_SECONDS),
-          sharedRedis.set(staleKey, value, "EX", WEATHER_STALE_TTL_SECONDS)
-        ])
-        if (writes.some((result) => result.status === "rejected")) {
-          logger.warn("Weather cache write failed")
+        if (redis?.status === "ready") {
+          const value = JSON.stringify(weather)
+          const writes = await Promise.allSettled([
+            redis.set(freshKey, value, "EX", WEATHER_FRESH_TTL_SECONDS),
+            redis.set(staleKey, value, "EX", WEATHER_STALE_TTL_SECONDS)
+          ])
+          if (writes.some((result) => result.status === "rejected")) {
+            logger.warn("Weather cache write failed")
+          }
         }
-      }
 
-      return { weather, cacheStatus: "miss" as const }
-    } catch (error) {
-      if (staleWeather) {
-        logger.warn({ err: error }, "Weather provider failed; serving stale forecast")
-        return { weather: staleWeather, cacheStatus: "stale" as const }
+        return { weather, cacheStatus: "miss" as const }
+      } catch (error) {
+        if (staleWeather) {
+          logger.warn({ err: error }, "Weather provider failed; serving stale forecast")
+          return { weather: staleWeather, cacheStatus: "stale" as const }
+        }
+        throw error
       }
-      throw error
+    })()
+
+    inFlight.set(key, load)
+    try {
+      return await load
+    } finally {
+      if (inFlight.get(key) === load) inFlight.delete(key)
     }
-  })()
-
-  inFlight.set(key, load)
-  try {
-    return await load
-  } finally {
-    if (inFlight.get(key) === load) inFlight.delete(key)
   }
+
+  return { getCachedWeather }
 }
+
+const productionWeatherCache = createWeatherCache()
+
+export const getCachedWeather = productionWeatherCache.getCachedWeather

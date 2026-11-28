@@ -10,6 +10,7 @@
     "typecheck": "turbo typecheck",
     "test": "pnpm --filter @weather-universe/api test && pnpm --filter web test",
     "test:e2e": "pnpm --filter web test:e2e",
+    "test:e2e:live": "pnpm --filter web test:e2e:live",
     "smoke:prod": "pnpm --filter @weather-universe/api smoke:prod"
   },
   "devDependencies": {
